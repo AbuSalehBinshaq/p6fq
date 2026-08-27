@@ -14,7 +14,7 @@ describe("Render order API", () => {
     notifier.notifyRenderOwner.mockResolvedValue(true);
     db.markRenderOwnerNotified.mockResolvedValue(undefined);
     const caller = renderRouter.createCaller({});
-    const result = await caller.orders.startConversation({ childName: "ريان", childAge: 5, childInterest: "الفضاء", contactMethod: "telegram", contactValue: "@rayan_parent", privacyConsent: true });
+    const result = await caller.orders.startConversation({ childName: "ريان", childAge: 4, childInterest: "الفضاء", contactMethod: "telegram", contactValue: "@rayan_parent", privacyConsent: true });
     expect(result.reference).toMatch(/^BS-/);
     expect(result.telegramUrl).toContain("https://t.me/p6_fq?text=");
     expect(db.createRenderConversationOrder).toHaveBeenCalledOnce();
