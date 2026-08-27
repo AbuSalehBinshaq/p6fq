@@ -19,3 +19,5 @@ services:
         value: "true"
       - key: DISCORD_WEBHOOK_URL
         sync: false
+      - key: ORDERS_DASHBOARD_PASSWORD
+        sync: false

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { contentImageLoadingProps, heroImageLoadingProps } from "@shared/imageLoading";
-import { type ConversationRequest } from "@shared/orderFlow";
+import { childAgeRanges, type ConversationRequest } from "@shared/orderFlow";
 import { supportedPaymentMethods } from "@shared/paymentMethods";
 import { ArrowLeft, Check, ChevronDown, Clock3, Heart, ImagePlus, LockKeyhole, MessageCircle, Phone, Quote, Sparkles, Star, UserRound, X } from "lucide-react";
 import { FormEvent, useRef, useState } from "react";
@@ -91,7 +91,7 @@ export default function Home() {
       <div className="top-strip"><span>بداية لطيفة، بلا التزام</span><b>تفاهم شخصي قبل الصورة والدفع</b><span>·</span><span>رد خلال 24 ساعة كحد أقصى</span></div>
       <nav className="site-nav page-width" aria-label="التنقل الرئيسي">
         <a href="#top" className="brand"><span className="brand-icon"><Sparkles size={18} /></span><span>بطل قصتي</span></a>
-        <div className="nav-links"><a href="#what-you-get">وش بتستلمين؟</a><a href="#examples">أمثلة حقيقية</a><a href="#how">كيف نبدأ؟</a><a href="#trust">طمأنينة لك</a></div>
+        <div className="nav-links"><a href="#what-you-get">شو بتستلمين؟</a><a href="#examples">أمثلة حقيقية</a><a href="#how">كيف نبدأ؟</a><a href="#trust">طمأنينة لك</a></div>
         <Button className="nav-button" onClick={scrollToConversation}>ابدئي محادثة <ArrowLeft size={16} /></Button>
       </nav>
 
@@ -100,7 +100,7 @@ export default function Home() {
           <div className="eyebrow"><span>✦</span> حكاية عربية لا تشبه أي حكاية أخرى</div>
           <h1>مو بس قصة باسم طفلك.<br /><em>هذه ذكرى تقول له: أنت مهم.</em></h1>
           <p className="hero-lede">نحوّل اهتمامه الصغير إلى مغامرة عربية دافئة، يكون هو بطلها. نتفاهم معك شخصياً أولاً، ثم نطلب الصورة داخل تيليجرام، ونرسل لك معاينة قبل أي دفع.</p>
-          <div className="human-promise"><div className="promise-number">01</div><p><b>ما تحتاجين تعرفين أي شيء تقني.</b><br />قولي لنا وش يحب طفلك، ونحن نمشي معك خطوة بخطوة.</p></div>
+          <div className="human-promise"><div className="promise-number">01</div><p><b>ما تحتاجين تعرفين أي شيء تقني.</b><br />قولي لنا شو يحب طفلك، ونحن نمشي معك خطوة بخطوة.</p></div>
           <div className="hero-actions"><Button className="primary-button" onClick={scrollToConversation}>خلينا نتفاهم عن قصته <MessageCircle size={19} /></Button><a href="#examples" className="quiet-link"><span>↓</span> شوفي النتيجة أولاً</a></div>
           <div className="hero-anchors"><span><Check size={15} /> لا صورة في الموقع</span><span><Check size={15} /> لا دفع الآن</span><span><Check size={15} /> محادثة بشرية واضحة</span></div>
         </div>
@@ -112,10 +112,10 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="reassurance"><div className="page-width reassurance-inner"><span>ببساطة، وش بيصير؟</span><b>نتفاهم</b><i>←</i><b>ترسلين الصورة في تيليجرام</b><i>←</i><b>تشوفين المعاينة</b><i>←</i><b>تدفعين إذا اقتنعتِ</b></div></section>
+      <section className="reassurance"><div className="page-width reassurance-inner"><span>ببساطة، شو بيصير؟</span><b>نتفاهم</b><i>←</i><b>ترسلين الصورة في تيليجرام</b><i>←</i><b>تشوفين المعاينة</b><i>←</i><b>تدفعين إذا اقتنعتِ</b></div></section>
 
       <section id="what-you-get" className="value-section page-width">
-        <div className="section-heading"><div><span className="section-label">وش بيوصل لكم في النهاية؟</span><h2>وقت قصير مع حكاية<br /><em>تبقى في الذاكرة.</em></h2></div><p>مو مجرد اسم على غلاف. نكتب القصة حول اهتمامه، ونصنع شخصية قصصية لطيفة مستوحاة منه.</p></div>
+        <div className="section-heading"><div><span className="section-label">شو بيوصل لكم في النهاية؟</span><h2>وقت قصير مع حكاية<br /><em>تبقى في الذاكرة.</em></h2></div><p>مو مجرد اسم على غلاف. نكتب القصة حول اهتمامه، ونصنع شخصية قصصية لطيفة مستوحاة منه.</p></div>
         <div className="value-grid">
           <article className="value-card peach"><span>للطفل</span><div className="value-icon"><Star size={22} fill="currentColor" /></div><h3>يشوف نفسه بطلاً</h3><p>يقرأ اسمه داخل مغامرة تشبه ما يحبه، ويشعر أن الحكاية كُتبت له وحده.</p></article>
           <article className="value-card mint"><span>للأهل</span><div className="value-icon"><Heart size={22} fill="currentColor" /></div><h3>ذكرى جاهزة للحفظ</h3><p>PDF عربي من 8 صفحات تفتحينه وقت النوم وتحفظينه أو ترسلينه لمن يحب.</p></article>
@@ -140,17 +140,17 @@ export default function Home() {
         <div className="case-visual"><div className="case-photo"><span>قبل</span><img src={ASSETS.ahmadOriginal} alt="الصورة الأصلية لأحمد" {...contentImageLoadingProps} /></div><div className="case-arrow">←</div><div className="case-pages"><span>بعد</span><img src={ASSETS.ahmadPage1} alt="غلاف قصة أحمد" {...contentImageLoadingProps} /><img src={ASSETS.ahmadPage2} alt="صفحة من قصة أحمد" {...contentImageLoadingProps} /><img src={ASSETS.ahmadPage3} alt="صفحة ختامية من قصة أحمد" {...contentImageLoadingProps} /></div></div>
       </section>
 
-      <section id="how" className="journey-section"><div className="page-width"><div className="journey-heading"><div><span className="section-label">كيف نمشي معك؟</span><h2>أربع خطوات بشرية.<br /><em>ولا وحدة منها معقدة.</em></h2></div><p>نحن نفضل أن نتفاهم معك قبل أن نطلب منّك أي شيء حساس أو ندخلك في دفع.</p></div><div className="journey-grid"><article><b>1</b><h3>قولي لنا وش يحب</h3><p>الاسم والعمر وفكرة أو اهتمام بسيط. هذه كل البداية.</p></article><article><b>2</b><h3>نتفاهم في تيليجرام</h3><p>نسأل ونقترح معك الشخصيات والجو الذي يشبه طفلك.</p></article><article><b>3</b><h3>ترسلين الصورة بعد الاتفاق</h3><p>داخل المحادثة فقط، حتى تكونين مرتاحة وفاهمة لماذا نحتاجها.</p></article><article><b>4</b><h3>تشوفين ثم تقررين</h3><p>نرسل المعاينة، ولا يكون الدفع إلا إذا حبيتي النتيجة.</p></article></div></div></section>
+      <section id="how" className="journey-section"><div className="page-width"><div className="journey-heading"><div><span className="section-label">كيف نمشي معك؟</span><h2>أربع خطوات بشرية.<br /><em>ولا وحدة منها معقدة.</em></h2></div><p>نحن نفضل أن نتفاهم معك قبل أن نطلب منّك أي شيء حساس أو ندخلك في دفع.</p></div><div className="journey-grid"><article><b>1</b><h3>قولي لنا شو يحب</h3><p>الاسم والعمر وفكرة أو اهتمام بسيط. هذه كل البداية.</p></article><article><b>2</b><h3>نتفاهم في تيليجرام</h3><p>نسأل ونقترح معك الشخصيات والجو الذي يشبه طفلك.</p></article><article><b>3</b><h3>ترسلين الصورة بعد الاتفاق</h3><p>داخل المحادثة فقط، حتى تكونين مرتاحة وفاهمة لماذا نحتاجها.</p></article><article><b>4</b><h3>تشوفين ثم تقررين</h3><p>نرسل المعاينة، ولا يكون الدفع إلا إذا حبيتي النتيجة.</p></article></div></div></section>
 
-      <section id="trust" className="trust-section page-width"><div className="trust-mark"><LockKeyhole size={30} /><span>وضوح<br /><b>وطمأنينة</b></span></div><div><span className="section-label">قبل ما تبدين، هذه وعودنا لك</span><h2>ما نبيك تقتنعين بسرعة.<br /><em>نبيك تكونين مرتاحة.</em></h2><div className="trust-list"><p><b>السعر واضح من البداية.</b> سعر الإطلاق الحالي يبدأ من 17 د.إ لملف PDF مخصص من 8 صفحات، وأي إضافة نوضحها قبل أن نبدأ.</p><p><b>الرد شخصي خلال 24 ساعة كحد أقصى.</b> المحادثة مو روبوت، ونتفاهم معك بلغتك وبهدوء.</p><p><b>لا صورة ولا دفع من الموقع.</b> تبدأين كلاماً بسيطاً فقط. بعد التفاهم، ترسلين الصورة داخل تيليجرام إذا ارتحتِ.</p><p><b>المعاينة قبل القرار.</b> نشوف معك إن كانت النتيجة مناسبة، ونناقش التعديل البسيط قبل الدفع.</p></div></div></section>
+      <section id="trust" className="trust-section page-width"><div className="trust-mark"><LockKeyhole size={30} /><span>وضوح<br /><b>وطمأنينة</b></span></div><div><span className="section-label">قبل ما تبدين، هذه وعودنا لك</span><h2>مانباك تقتنعين بسرعة.<br /><em>نبغاك تكونين مرتاحة.</em></h2><div className="trust-list"><p><b>السعر واضح من البداية.</b> سعر الإطلاق الحالي يبدأ من 17 د.إ لملف PDF مخصص من 8 صفحات، وأي إضافة نوضحها قبل أن نبدأ.</p><p><b>الرد شخصي خلال 24 ساعة كحد أقصى.</b> المحادثة مو روبوت، ونتفاهم معك بلغتك وبهدوء.</p><p><b>لا صورة ولا دفع من الموقع.</b> تبدأين كلاماً بسيطاً فقط. بعد التفاهم، ترسلين الصورة داخل تيليجرام إذا ارتحتِ.</p><p><b>المعاينة قبل القرار.</b> نشوف معك إن كانت النتيجة مناسبة، ونناقش التعديل البسيط قبل الدفع.</p></div></div></section>
 
       <section ref={conversationRef} id="conversation" className="conversation-section page-width">
         <div className="conversation-intro"><span className="section-label">ابدئي بالأسهل</span><h2>قولي لنا عن طفلك.<br /><em>والباقي علينا.</em></h2><p>لن نطلب صورة أو بطاقة أو دفع هنا. عبّي البيانات البسيطة، ثم سيفتح تيليجرام برسالة مرتبة حتى تبدأين التفاهم معنا مباشرة.</p><div className="response-card"><Clock3 size={20} /><div><b>نرد خلال 24 ساعة كحد أقصى</b><span>ورقم طلبك يبقى معنا حتى ما تضيع تفاصيل البداية.</span></div></div><div className="response-card"><Phone size={20} /><div><b>هذه محادثة مع شخص، مو نظام معقد</b><span>اختاري ما يناسبك، واسألي عن أي تفصيلة قبل إرسال الصورة.</span></div></div></div>
         <div className="conversation-card">
           <form onSubmit={submit} noValidate>
             <div className="form-head"><span>خطوة قصيرة · بدون التزام</span><h3>نبدأ الحكاية من هنا</h3><p>المعلومات تساعدنا نفهم طفلك قبل ما نتكلم معك.</p></div>
-            <div className="form-row"><label>اسم الطفل<input value={form.childName} onChange={event => setForm({ ...form, childName: event.target.value })} placeholder="مثال: ريان" /></label><label>العمر<select value={form.childAge || ""} onChange={event => setForm({ ...form, childAge: Number(event.target.value) })}><option value="">اختاري العمر</option>{Array.from({ length: 13 }, (_, index) => index + 2).map(age => <option key={age} value={age}>{age} سنوات</option>)}</select></label></div>
-            <label>وش يحب طفلك أو وش تتمنين تكون قصته؟<textarea value={form.childInterest} onChange={event => setForm({ ...form, childInterest: event.target.value })} placeholder="مثال: يحب الفضاء ويتمنى يكتشف كوكباً جديداً" rows={3} /></label>
+            <div className="form-row"><label>اسم الطفل<input value={form.childName} onChange={event => setForm({ ...form, childName: event.target.value })} placeholder="اكتبي الاسم الذي تحبين يظهر في القصة" /></label><label>العمر<select value={form.childAge || ""} onChange={event => setForm({ ...form, childAge: Number(event.target.value) })}><option value="">اختاري نطاق العمر</option>{childAgeRanges.map(ageRange => <option key={ageRange.value} value={ageRange.value}>{ageRange.label}</option>)}</select></label></div>
+            <label>شو يحب طفلك أو شو تتمنين تكون قصته؟<textarea value={form.childInterest} onChange={event => setForm({ ...form, childInterest: event.target.value })} placeholder="مثال: يحب الفضاء ويتمنى يكتشف كوكباً جديداً" rows={3} /></label>
             <div className="form-row"><label>أفضل وسيلة للرد عليك<select value={form.contactMethod} onChange={event => setForm({ ...form, contactMethod: event.target.value as ConversationRequest["contactMethod"] })}><option value="telegram">تيليجرام</option><option value="whatsapp">واتساب</option><option value="phone">اتصال</option></select></label><label>{form.contactMethod === "telegram" ? "يوزر تيليجرام" : form.contactMethod === "whatsapp" ? "رقم واتساب" : "رقم الهاتف"}<input value={form.contactValue} onChange={event => setForm({ ...form, contactValue: event.target.value })} placeholder={form.contactMethod === "telegram" ? "مثال: @yourname" : "مثال: 05xxxxxxxx"} /></label></div>
             <label className="consent-row"><input type="checkbox" checked={form.privacyConsent} onChange={event => setForm({ ...form, privacyConsent: event.target.checked })} /><span>أوافق على <a href="/privacy" target="_blank" rel="noreferrer">سياسة الخصوصية</a> وحفظ بيانات البداية أعلاه لبدء المحادثة فقط. أفهم أن الصورة سأرسلها لاحقاً داخل تيليجرام بعد التفاهم المبدئي.</span></label>
             {startConversation.error && <p className="form-error">{startConversation.error.message}</p>}

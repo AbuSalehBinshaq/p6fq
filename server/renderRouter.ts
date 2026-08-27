@@ -1,11 +1,15 @@
-import { initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
+import type { Request } from "express";
+import { z } from "zod";
 import { nanoid } from "nanoid";
 import superjson from "superjson";
-import { buildConversationTelegramUrl, conversationRequestSchema } from "../shared/orderFlow";
-import { createRenderConversationOrder, markRenderOwnerNotified, markRenderTelegramOpened } from "./renderDb";
+import { buildConversationTelegramUrl, conversationRequestSchema, orderStatusValues } from "../shared/orderFlow";
+import { createRenderConversationOrder, listRenderConversationOrders, markRenderOwnerNotified, markRenderTelegramOpened, updateRenderConversationOrder } from "./renderDb";
+import { hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
 
-const t = initTRPC.create({ transformer: superjson });
+const t = initTRPC.context<{ req: Request }>().create({ transformer: superjson });
+const dashboardProcedure = t.procedure.use(({ ctx, next }) => { if (!hasDashboardAccess(ctx.req)) throw new TRPCError({ code: "UNAUTHORIZED" }); return next(); });
 
 export const renderRouter = t.router({
   orders: t.router({
@@ -31,6 +35,8 @@ export const renderRouter = t.router({
       await markRenderTelegramOpened(input.reference);
       return { success: true } as const;
     }),
+    list: dashboardProcedure.query(() => listRenderConversationOrders()),
+    update: dashboardProcedure.input(conversationRequestSchema.pick({}).extend({ reference: conversationRequestSchema.shape.childName.regex(/^BS-[A-Z0-9_-]+$/), status: z.enum(orderStatusValues), adminNotes: z.string().trim().max(1000) })).mutation(async ({ input }) => { await updateRenderConversationOrder(input.reference, input.status, input.adminNotes); return { success: true } as const; }),
   }),
 });
 

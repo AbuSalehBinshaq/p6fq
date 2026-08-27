@@ -1,7 +1,8 @@
 import { Pool } from "pg";
-import type { ConversationRequest } from "../shared/orderFlow";
+import type { ConversationRequest, OrderStatus } from "../shared/orderFlow";
 
 type RenderOrder = ConversationRequest & { reference: string };
+export type RenderOrderRecord = RenderOrder & { status: OrderStatus; adminNotes: string | null; createdAt: Date; ownerNotifiedAt: Date | null; telegramOpenedAt: Date | null };
 
 let pool: Pool | null = null;
 
@@ -32,12 +33,14 @@ export async function migrateRenderDatabase() {
       contact_value VARCHAR(120) NOT NULL,
       privacy_consent BOOLEAN NOT NULL DEFAULT FALSE,
       status VARCHAR(40) NOT NULL DEFAULT 'conversation_started',
+      admin_notes VARCHAR(1000),
       owner_notified_at TIMESTAMPTZ,
       telegram_opened_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
+  await getRenderPool().query("ALTER TABLE conversation_orders ADD COLUMN IF NOT EXISTS admin_notes VARCHAR(1000)");
 }
 
 export async function createRenderConversationOrder(order: RenderOrder) {
@@ -61,4 +64,13 @@ export async function markRenderTelegramOpened(reference: string) {
     "UPDATE conversation_orders SET telegram_opened_at = NOW(), updated_at = NOW() WHERE reference = $1",
     [reference],
   );
+}
+
+export async function listRenderConversationOrders() {
+  const result = await getRenderPool().query<RenderOrderRecord>(`SELECT reference, child_name AS "childName", child_age AS "childAge", child_interest AS "childInterest", contact_method AS "contactMethod", contact_value AS "contactValue", privacy_consent AS "privacyConsent", status, admin_notes AS "adminNotes", created_at AS "createdAt", owner_notified_at AS "ownerNotifiedAt", telegram_opened_at AS "telegramOpenedAt" FROM conversation_orders ORDER BY created_at DESC`);
+  return result.rows;
+}
+
+export async function updateRenderConversationOrder(reference: string, status: OrderStatus, adminNotes: string) {
+  await getRenderPool().query("UPDATE conversation_orders SET status = $2, admin_notes = $3, updated_at = NOW() WHERE reference = $1", [reference, status, adminNotes.trim() || null]);
 }
