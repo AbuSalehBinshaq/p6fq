@@ -4,7 +4,7 @@ export const heroImageLoadingProps = {
   decoding: "async",
 } as const;
 
-export const deferredImageLoadingProps = {
-  loading: "lazy",
+export const contentImageLoadingProps = {
+  loading: "eager",
   decoding: "async",
 } as const;
