@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { trackCampaignLanding, trackEvent } from "@/lib/analytics";
 import { contentImageLoadingProps, heroImageLoadingProps } from "@shared/imageLoading";
 import { childAgeRanges, type ConversationRequest } from "@shared/orderFlow";
 import { supportedPaymentMethods } from "@shared/paymentMethods";
 import { ArrowLeft, Check, ChevronDown, Clock3, Heart, ImagePlus, LockKeyhole, MessageCircle, Phone, Quote, Sparkles, Star, UserRound, X } from "lucide-react";
-import { FormEvent, useRef, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 
 const ASSETS = {
@@ -68,16 +69,36 @@ const initialForm: ConversationRequest = {
 
 export default function Home() {
   const conversationRef = useRef<HTMLElement>(null);
+  const formViewed = useRef(false);
+  const formStarted = useRef(false);
   const [form, setForm] = useState<ConversationRequest>(initialForm);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [gallery, setGallery] = useState<(typeof evidence)[number] | null>(null);
   const [, setLocation] = useLocation();
   const startConversation = trpc.orders.startConversation.useMutation({
     onSuccess: data => {
+      trackEvent("conversation_request_submitted");
       sessionStorage.setItem("batal-conversation", JSON.stringify(data));
       setLocation(`/thanks?ref=${encodeURIComponent(data.reference)}`);
     },
   });
+
+  useEffect(() => {
+    trackCampaignLanding();
+
+    const section = conversationRef.current;
+    if (!section || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !formViewed.current) {
+        formViewed.current = true;
+        trackEvent("form_view");
+        observer.disconnect();
+      }
+    }, { threshold: 0.35 });
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
 
   const scrollToConversation = () => conversationRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
@@ -146,8 +167,13 @@ export default function Home() {
 
       <section ref={conversationRef} id="conversation" className="conversation-section page-width">
         <div className="conversation-intro"><span className="section-label">ابدئي بالأسهل</span><h2>قولي لنا عن طفلك.<br /><em>والباقي علينا.</em></h2><p>لن نطلب صورة أو بطاقة أو دفع هنا. عبّي البيانات البسيطة، ثم سيفتح تيليجرام برسالة مرتبة حتى تبدأين التفاهم معنا مباشرة.</p><div className="response-card"><Clock3 size={20} /><div><b>نرد خلال 24 ساعة كحد أقصى</b><span>ورقم طلبك يبقى معنا حتى ما تضيع تفاصيل البداية.</span></div></div><div className="response-card"><Phone size={20} /><div><b>هذه محادثة مع شخص، مو نظام معقد</b><span>اختاري ما يناسبك، واسألي عن أي تفصيلة قبل إرسال الصورة.</span></div></div></div>
-        <div className="conversation-card">
-          <form onSubmit={submit} noValidate>
+        <div className="conversation-card clarity-mask" data-clarity-mask="true">
+          <form onSubmit={submit} onFocusCapture={() => {
+            if (!formStarted.current) {
+              formStarted.current = true;
+              trackEvent("form_start");
+            }
+          }} noValidate data-clarity-mask="true">
             <div className="form-head"><span>خطوة قصيرة · بدون التزام</span><h3>نبدأ الحكاية من هنا</h3><p>المعلومات تساعدنا نفهم طفلك قبل ما نتكلم معك.</p></div>
             <div className="form-row"><label>اسم الطفل<input value={form.childName} onChange={event => setForm({ ...form, childName: event.target.value })} placeholder="اكتبي الاسم الذي تحبين يظهر في القصة" /></label><label>العمر<select value={form.childAge || ""} onChange={event => setForm({ ...form, childAge: Number(event.target.value) })}><option value="">اختاري نطاق العمر</option>{childAgeRanges.map(ageRange => <option key={ageRange.value} value={ageRange.value}>{ageRange.label}</option>)}</select></label></div>
             <label>شو يحب طفلك أو شو تتمنين تكون قصته؟<textarea value={form.childInterest} onChange={event => setForm({ ...form, childInterest: event.target.value })} placeholder="مثال: يحب الفضاء ويتمنى يكتشف كوكباً جديداً" rows={3} /></label>
