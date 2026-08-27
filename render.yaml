@@ -3,7 +3,7 @@ services:
     runtime: node
     name: batal-story
     region: frankfurt
-    plan: starter
+    plan: free
     buildCommand: pnpm install --frozen-lockfile && pnpm build:render
     preDeployCommand: pnpm db:migrate:render
     startCommand: pnpm start:render
@@ -15,8 +15,17 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: batal-story-db
+          property: connectionString
       - key: DATABASE_SSL
         value: "false"
       - key: DISCORD_WEBHOOK_URL
         sync: false
+
+databases:
+  - name: batal-story-db
+    databaseName: batal_story
+    user: batal_story
+    region: frankfurt
+    plan: free
