@@ -3,6 +3,7 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { renderRouter } from "./renderRouter";
+import { initializeRenderDatabase } from "./renderStartup";
 
 const app = express();
 const currentDir = dirname(fileURLToPath(import.meta.url));
@@ -17,4 +18,12 @@ app.use("/api/trpc", createExpressMiddleware({ router: renderRouter, createConte
 app.use(express.static(staticDir, { maxAge: "1y", immutable: true, index: false }));
 app.get("*", (_req, res) => res.sendFile(join(staticDir, "index.html")));
 
-app.listen(port, "0.0.0.0", () => console.log(`[Render] Server listening on port ${port}`));
+async function startRenderServer() {
+  await initializeRenderDatabase();
+  app.listen(port, "0.0.0.0", () => console.log(`[Render] Server listening on port ${port}`));
+}
+
+void startRenderServer().catch(error => {
+  console.error("[Render] Database migration failed during startup", error);
+  process.exit(1);
+});
