@@ -27,3 +27,7 @@ export function readCampaignParameters(search: string): CampaignParameters {
 export function hasCampaignParameters(parameters: CampaignParameters): boolean {
   return Object.keys(parameters).length > 0;
 }
+
+export function campaignParametersToQuery(parameters: CampaignParameters): string {
+  return new URLSearchParams(parameters).toString();
+}

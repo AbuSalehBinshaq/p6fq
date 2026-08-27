@@ -1,4 +1,4 @@
-import { hasCampaignParameters, readCampaignParameters, type CampaignParameters } from "@shared/campaignTracking";
+import { campaignParametersToQuery, hasCampaignParameters, readCampaignParameters, type CampaignParameters } from "@shared/campaignTracking";
 
 declare global {
   interface Window {
@@ -15,6 +15,10 @@ export type SafeAnalyticsEvent =
 
 function campaignParameters(): CampaignParameters {
   return readCampaignParameters(window.location.search);
+}
+
+export function campaignQueryString(): string {
+  return campaignParametersToQuery(campaignParameters());
 }
 
 /**
