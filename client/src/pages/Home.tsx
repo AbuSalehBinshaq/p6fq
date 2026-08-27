@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
-import { trackCampaignLanding, trackEvent } from "@/lib/analytics";
+import { campaignQueryString, trackCampaignLanding, trackEvent } from "@/lib/analytics";
 import { contentImageLoadingProps, heroImageLoadingProps } from "@shared/imageLoading";
 import { childAgeRanges, type ConversationRequest } from "@shared/orderFlow";
 import { supportedPaymentMethods } from "@shared/paymentMethods";
@@ -79,7 +79,8 @@ export default function Home() {
     onSuccess: data => {
       trackEvent("conversation_request_submitted");
       sessionStorage.setItem("batal-conversation", JSON.stringify(data));
-      setLocation(`/thanks?ref=${encodeURIComponent(data.reference)}`);
+      const campaignQuery = campaignQueryString();
+      setLocation(`/thanks?ref=${encodeURIComponent(data.reference)}${campaignQuery ? `&${campaignQuery}` : ""}`);
     },
   });
 
