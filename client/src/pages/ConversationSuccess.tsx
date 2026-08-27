@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
+import { trackEvent } from "@/lib/analytics";
 import { ArrowLeft, Check, ClipboardCheck, LockKeyhole, MessageCircle, Sparkles } from "lucide-react";
 import { useMemo } from "react";
 import { useLocation } from "wouter";
@@ -26,6 +27,7 @@ export default function ConversationSuccess() {
 
   const openTelegram = () => {
     if (orderReference.startsWith("BS-")) markTelegramOpened.mutate({ reference: orderReference });
+    trackEvent("telegram_handoff_opened");
     window.open(session?.telegramUrl ?? "https://t.me/p6_fq", "_blank", "noopener,noreferrer");
   };
 
