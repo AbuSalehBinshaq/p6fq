@@ -15,7 +15,7 @@ app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "1mb" }));
 app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
-app.use("/orders", requireDashboardAccess);
+app.use(["/orders", "/expenses", "/summary"], requireDashboardAccess);
 app.use("/api/trpc", createExpressMiddleware({ router: renderRouter, createContext: ({ req }) => ({ req }) }));
 app.use(express.static(staticDir, { maxAge: "1y", immutable: true, index: false }));
 app.get("*", (_req, res) => res.sendFile(join(staticDir, "index.html")));
