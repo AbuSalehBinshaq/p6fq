@@ -5,6 +5,7 @@ import { dirname, join } from "node:path";
 import { renderRouter } from "./renderRouter";
 import { initializeRenderDatabase } from "./renderStartup";
 import { requireDashboardAccess } from "./renderAuth";
+import { captureReferralFromRequest } from "./referral";
 
 const app = express();
 const currentDir = dirname(fileURLToPath(import.meta.url));
@@ -14,6 +15,10 @@ const port = Number(process.env.PORT ?? 10000);
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "1mb" }));
+app.use((req, res, next) => {
+  if (req.method === "GET" && req.path !== "/health") captureReferralFromRequest(req, res);
+  next();
+});
 app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
 app.use(["/orders", "/expenses", "/summary"], requireDashboardAccess);
 app.use("/api/trpc", createExpressMiddleware({ router: renderRouter, createContext: ({ req }) => ({ req }) }));

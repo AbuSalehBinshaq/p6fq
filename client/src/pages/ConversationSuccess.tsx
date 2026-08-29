@@ -20,7 +20,12 @@ function readConversationSession(): ConversationSession | null {
 
 export default function ConversationSuccess() {
   const [, setLocation] = useLocation();
-  const reference = useMemo(() => new URLSearchParams(window.location.search).get("ref"), []);
+  const reference = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const order = params.get("order");
+    const legacyRef = params.get("ref");
+    return order ?? (legacyRef?.startsWith("BS-") ? legacyRef : null);
+  }, []);
   const session = useMemo(() => readConversationSession(), []);
   const orderReference = session?.reference ?? reference ?? "—";
   const markTelegramOpened = trpc.orders.markTelegramOpened.useMutation();

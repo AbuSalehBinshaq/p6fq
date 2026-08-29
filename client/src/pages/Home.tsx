@@ -80,7 +80,7 @@ export default function Home() {
       trackEvent("conversation_request_submitted");
       sessionStorage.setItem("batal-conversation", JSON.stringify(data));
       const campaignQuery = campaignQueryString();
-      setLocation(`/thanks?ref=${encodeURIComponent(data.reference)}${campaignQuery ? `&${campaignQuery}` : ""}`);
+      setLocation(`/thanks?order=${encodeURIComponent(data.reference)}${campaignQuery ? `&${campaignQuery}` : ""}`);
     },
   });
 
