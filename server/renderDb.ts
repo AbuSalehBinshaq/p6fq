@@ -1,7 +1,7 @@
 import { Pool } from "pg";
 import type { ConversationRequest, OrderStatus } from "../shared/orderFlow";
 
-type RenderOrder = ConversationRequest & { reference: string };
+type RenderOrder = ConversationRequest & { reference: string; referralCode: string | null };
 export type RenderOrderRecord = RenderOrder & { status: OrderStatus; adminNotes: string | null; createdAt: Date; ownerNotifiedAt: Date | null; telegramOpenedAt: Date | null };
 
 let pool: Pool | null = null;
@@ -32,6 +32,7 @@ export async function migrateRenderDatabase() {
       contact_method VARCHAR(20) NOT NULL CHECK (contact_method IN ('telegram', 'whatsapp', 'phone')),
       contact_value VARCHAR(120) NOT NULL,
       privacy_consent BOOLEAN NOT NULL DEFAULT FALSE,
+      referral_code VARCHAR(48),
       status VARCHAR(40) NOT NULL DEFAULT 'conversation_started',
       admin_notes VARCHAR(1000),
       owner_notified_at TIMESTAMPTZ,
@@ -41,14 +42,15 @@ export async function migrateRenderDatabase() {
     );
   `);
   await getRenderPool().query("ALTER TABLE conversation_orders ADD COLUMN IF NOT EXISTS admin_notes VARCHAR(1000)");
+  await getRenderPool().query("ALTER TABLE conversation_orders ADD COLUMN IF NOT EXISTS referral_code VARCHAR(48)");
 }
 
 export async function createRenderConversationOrder(order: RenderOrder) {
   await getRenderPool().query(
     `INSERT INTO conversation_orders
-      (reference, child_name, child_age, child_interest, contact_method, contact_value, privacy_consent)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [order.reference, order.childName, order.childAge, order.childInterest, order.contactMethod, order.contactValue, order.privacyConsent],
+      (reference, child_name, child_age, child_interest, contact_method, contact_value, privacy_consent, referral_code)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+    [order.reference, order.childName, order.childAge, order.childInterest, order.contactMethod, order.contactValue, order.privacyConsent, order.referralCode],
   );
 }
 
@@ -67,7 +69,7 @@ export async function markRenderTelegramOpened(reference: string) {
 }
 
 export async function listRenderConversationOrders() {
-  const result = await getRenderPool().query<RenderOrderRecord>(`SELECT reference, child_name AS "childName", child_age AS "childAge", child_interest AS "childInterest", contact_method AS "contactMethod", contact_value AS "contactValue", privacy_consent AS "privacyConsent", status, admin_notes AS "adminNotes", created_at AS "createdAt", owner_notified_at AS "ownerNotifiedAt", telegram_opened_at AS "telegramOpenedAt" FROM conversation_orders ORDER BY created_at DESC`);
+  const result = await getRenderPool().query<RenderOrderRecord>(`SELECT reference, child_name AS "childName", child_age AS "childAge", child_interest AS "childInterest", contact_method AS "contactMethod", contact_value AS "contactValue", privacy_consent AS "privacyConsent", referral_code AS "referralCode", status, admin_notes AS "adminNotes", created_at AS "createdAt", owner_notified_at AS "ownerNotifiedAt", telegram_opened_at AS "telegramOpenedAt" FROM conversation_orders ORDER BY created_at DESC`);
   return result.rows;
 }
 
