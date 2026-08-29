@@ -4,13 +4,34 @@ import { z } from "zod";
 import { nanoid } from "nanoid";
 import superjson from "superjson";
 import { buildConversationTelegramUrl, conversationRequestSchema, orderStatusValues } from "../shared/orderFlow";
-import { createRenderConversationOrder, listRenderConversationOrders, markRenderOwnerNotified, markRenderTelegramOpened, updateRenderConversationOrder } from "./renderDb";
+import { expenseCategories, expenseInputSchema, paymentStatusValues } from "../shared/finance";
+import {
+  createRenderConversationOrder,
+  createRenderExpense,
+  deleteRenderExpense,
+  getRenderMonthlySummary,
+  listRenderConversationOrders,
+  listRenderExpenses,
+  markRenderOwnerNotified,
+  markRenderTelegramOpened,
+  updateRenderConversationOrder,
+} from "./renderDb";
 import { hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
 import { readReferralCode } from "./referral";
 
 const t = initTRPC.context<{ req: Request }>().create({ transformer: superjson });
-const dashboardProcedure = t.procedure.use(({ ctx, next }) => { if (!hasDashboardAccess(ctx.req)) throw new TRPCError({ code: "UNAUTHORIZED" }); return next(); });
+const dashboardProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!hasDashboardAccess(ctx.req)) throw new TRPCError({ code: "UNAUTHORIZED" });
+  return next();
+});
+
+const referenceSchema = z.string().regex(/^BS-[A-Z0-9_-]+$/);
+const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+const orderFinancialsSchema = z.object({
+  orderAmount: z.number().finite().min(0).max(999999999),
+  paymentStatus: z.enum(paymentStatusValues),
+});
 
 export const renderRouter = t.router({
   orders: t.router({
@@ -33,12 +54,27 @@ export const renderRouter = t.router({
 
       return { reference, telegramUrl: buildConversationTelegramUrl(input, reference) };
     }),
-    markTelegramOpened: t.procedure.input(conversationRequestSchema.pick({}).extend({ reference: conversationRequestSchema.shape.childName.regex(/^BS-[A-Z0-9_-]+$/) })).mutation(async ({ input }) => {
+    markTelegramOpened: t.procedure.input(z.object({ reference: referenceSchema })).mutation(async ({ input }) => {
       await markRenderTelegramOpened(input.reference);
       return { success: true } as const;
     }),
     list: dashboardProcedure.query(() => listRenderConversationOrders()),
-    update: dashboardProcedure.input(conversationRequestSchema.pick({}).extend({ reference: conversationRequestSchema.shape.childName.regex(/^BS-[A-Z0-9_-]+$/), status: z.enum(orderStatusValues), adminNotes: z.string().trim().max(1000) })).mutation(async ({ input }) => { await updateRenderConversationOrder(input.reference, input.status, input.adminNotes); return { success: true } as const; }),
+    update: dashboardProcedure.input(z.object({ reference: referenceSchema, status: z.enum(orderStatusValues), adminNotes: z.string().trim().max(1000), ...orderFinancialsSchema.shape })).mutation(async ({ input }) => {
+      await updateRenderConversationOrder(input.reference, input.status, input.adminNotes, input.orderAmount, input.paymentStatus);
+      return { success: true } as const;
+    }),
+  }),
+  expenses: t.router({
+    list: dashboardProcedure.input(z.object({ month: monthSchema.optional() }).optional()).query(({ input }) => listRenderExpenses(input?.month)),
+    create: dashboardProcedure.input(expenseInputSchema).mutation(async ({ input }) => createRenderExpense(input)),
+    delete: dashboardProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => {
+      await deleteRenderExpense(input.id);
+      return { success: true } as const;
+    }),
+    categories: dashboardProcedure.query(() => expenseCategories),
+  }),
+  summary: t.router({
+    monthly: dashboardProcedure.input(z.object({ month: monthSchema })).query(({ input }) => getRenderMonthlySummary(input.month)),
   }),
 });
 

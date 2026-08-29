@@ -20,7 +20,7 @@ app.use((req, res, next) => {
   next();
 });
 app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
-app.use("/orders", requireDashboardAccess);
+app.use(["/orders", "/expenses", "/summary"], requireDashboardAccess);
 app.use("/api/trpc", createExpressMiddleware({ router: renderRouter, createContext: ({ req }) => ({ req }) }));
 app.use(express.static(staticDir, { maxAge: "1y", immutable: true, index: false }));
 app.get("*", (_req, res) => res.sendFile(join(staticDir, "index.html")));
