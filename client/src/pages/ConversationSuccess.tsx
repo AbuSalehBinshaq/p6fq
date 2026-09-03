@@ -33,7 +33,7 @@ export default function ConversationSuccess() {
   const openTelegram = () => {
     if (orderReference.startsWith("BS-")) markTelegramOpened.mutate({ reference: orderReference });
     trackEvent("telegram_handoff_opened");
-    window.open(session?.telegramUrl ?? "https://t.me/p6_fq", "_blank", "noopener,noreferrer");
+    window.open(session?.telegramUrl ?? "https://t.me/AtharAe_bot", "_blank", "noopener,noreferrer");
   };
 
   return <main dir="rtl" className="success-page">

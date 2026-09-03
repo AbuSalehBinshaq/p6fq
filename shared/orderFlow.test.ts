@@ -23,6 +23,6 @@ describe("conversation request flow", () => {
     expect(message).toContain("رقم الطلب: BS-ABCDE");
     expect(message).toContain("العمر: 6–8 سنوات");
     expect(message).toContain("سأرسل صورة واضحة للطفل هنا داخل تيليجرام");
-    expect(url).toContain("https://t.me/p6_fq?text=");
+    expect(url).toBe("https://t.me/AtharAe_bot?start=BS-ABCDE");
   });
 });

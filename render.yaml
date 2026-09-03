@@ -25,3 +25,11 @@ services:
         sync: false
       - key: VITE_CLARITY_PROJECT_ID
         sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_OWNER_ID
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        generateValue: true
+      - key: TELEGRAM_WEBHOOK_URL
+        value: https://batal-story.onrender.com/api/telegram/webhook

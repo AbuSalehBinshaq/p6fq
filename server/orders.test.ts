@@ -37,8 +37,7 @@ describe("orders.startConversation", () => {
     expect(dbMocks.createConversationOrder).toHaveBeenCalledWith(expect.objectContaining({ childName: "ريان", status: "conversation_started" }));
     expect(notifyOwnerMock).toHaveBeenCalledWith(expect.objectContaining({ title: expect.stringContaining("طلب محادثة جديد") }));
     expect(dbMocks.markOrderOwnerNotified).toHaveBeenCalledWith(result.reference);
-    expect(result.telegramUrl).toContain("https://t.me/p6_fq?text=");
-    expect(decodeURIComponent(result.telegramUrl)).toContain("سأرسل صورة واضحة للطفل هنا داخل تيليجرام");
+    expect(result.telegramUrl).toBe(`https://t.me/AtharAe_bot?start=${result.reference}`);
   });
 
   it("keeps the conversation request valid when owner notification is temporarily unavailable", async () => {

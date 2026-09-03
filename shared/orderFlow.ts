@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const SELLER_TELEGRAM_HANDLE = "p6_fq";
+export const SELLER_TELEGRAM_HANDLE = "AtharAe_bot";
 
 export const contactMethodLabels = {
   telegram: "تيليجرام",
@@ -48,6 +48,6 @@ export function buildConversationTelegramMessage(input: ConversationRequest, ref
   ].join("\n");
 }
 
-export function buildConversationTelegramUrl(input: ConversationRequest, reference: string) {
-  return `https://t.me/${SELLER_TELEGRAM_HANDLE}?text=${encodeURIComponent(buildConversationTelegramMessage(input, reference))}`;
+export function buildConversationTelegramUrl(_input: ConversationRequest, reference: string) {
+  return `https://t.me/${SELLER_TELEGRAM_HANDLE}?start=${encodeURIComponent(reference)}`;
 }

@@ -19,7 +19,7 @@ describe("Render order API", () => {
     const caller = renderRouter.createCaller({});
     const result = await caller.orders.startConversation({ childName: "ريان", childAge: 4, childInterest: "الفضاء", contactMethod: "telegram", contactValue: "@rayan_parent", privacyConsent: true });
     expect(result.reference).toMatch(/^BS-/);
-    expect(result.telegramUrl).toContain("https://t.me/p6_fq?text=");
+    expect(result.telegramUrl).toBe(`https://t.me/AtharAe_bot?start=${result.reference}`);
     expect(db.createRenderConversationOrder).toHaveBeenCalledWith(expect.objectContaining({ reference: expect.stringMatching(/^BS-/), referralCode: "admin_ahmed" }));
   });
 });

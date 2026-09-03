@@ -6,6 +6,7 @@ import { renderRouter } from "./renderRouter";
 import { initializeRenderDatabase } from "./renderStartup";
 import { requireDashboardAccess } from "./renderAuth";
 import { captureReferralFromRequest } from "./referral";
+import { handleTelegramWebhook, initializeTelegramBot } from "./telegramBot";
 
 const app = express();
 const currentDir = dirname(fileURLToPath(import.meta.url));
@@ -20,6 +21,7 @@ app.use((req, res, next) => {
   next();
 });
 app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
+app.post("/api/telegram/webhook", handleTelegramWebhook);
 app.use(["/orders", "/expenses", "/summary"], requireDashboardAccess);
 app.use("/api/trpc", createExpressMiddleware({ router: renderRouter, createContext: ({ req }) => ({ req }) }));
 app.use(express.static(staticDir, { maxAge: "1y", immutable: true, index: false }));
@@ -27,6 +29,7 @@ app.get("*", (_req, res) => res.sendFile(join(staticDir, "index.html")));
 
 async function startRenderServer() {
   await initializeRenderDatabase();
+  await initializeTelegramBot();
   app.listen(port, "0.0.0.0", () => console.log(`[Render] Server listening on port ${port}`));
 }
 
