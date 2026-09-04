@@ -7,7 +7,10 @@ import { contactMethodLabels, formatChildAgeRange, type OrderStatus } from "../s
 const TELEGRAM_API = "https://api.telegram.org";
 const OWNER_ID = process.env.TELEGRAM_OWNER_ID?.trim() ?? "";
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim() ?? "";
-const WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET?.trim() ?? "";
+const RAW_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET?.trim() ?? "";
+// Telegram accepts only A-Z, a-z, 0-9, _ and - in secret_token.
+const WEBHOOK_SECRET = RAW_WEBHOOK_SECRET.replace(/[^A-Za-z0-9_-]/g, "").slice(0, 256);
+if (RAW_WEBHOOK_SECRET && RAW_WEBHOOK_SECRET !== WEBHOOK_SECRET) console.warn("[Telegram] Webhook secret contained unsupported characters; sanitized automatically.");
 const WEBHOOK_URL = process.env.TELEGRAM_WEBHOOK_URL?.trim() ?? "";
 
 const stages = ["welcome", "collect_name", "collect_age", "collect_interest", "confirm", "human_mode", "awaiting_photo"] as const;
