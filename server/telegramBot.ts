@@ -251,7 +251,12 @@ async function handleMessage(message: TelegramMessage) {
     });
   }
 
-  if (conversation.humanMode) {
+  const text = message.text?.trim() ?? "";
+  const normalized = text.toLowerCase();
+  const isResetCommand = normalized === "/start" || normalized.startsWith("/start ") || normalized === "/cancel" || text === "إلغاء";
+
+  // Reset commands must always win over human mode; otherwise the bot keeps forwarding them.
+  if (conversation.humanMode && !isResetCommand) {
     if (message.photo || message.document) {
       await telegramCall("forwardMessage", { chat_id: ownerChatId(), from_chat_id: message.chat.id, message_id: message.message_id });
       await notifyOwner(`📎 وصلت مرفقات من ${contactValue(conversation)}. راجع المحادثة وأرسل الرد عبر /reply ${conversation.chatId} نص الرد`);
@@ -262,9 +267,6 @@ async function handleMessage(message: TelegramMessage) {
     }
     return;
   }
-
-  const text = message.text?.trim() ?? "";
-  const normalized = text.toLowerCase();
 
   if (normalized === "/start" || normalized.startsWith("/start ")) {
     const startArgument = text.split(/\s+/)[1] ?? "";
