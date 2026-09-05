@@ -70,7 +70,7 @@ export default function ExpensesDashboard() {
           <label className="wide-field">ملاحظة اختيارية<textarea maxLength={500} rows={2} value={form.notes} onChange={event => setForm({ ...form, notes: event.target.value })} placeholder="أي تفاصيل تساعدك تراجعين المصروف لاحقاً" /></label>
           <button type="submit" className="admin-save-button" disabled={createExpense.isPending}><Plus size={16} /> {createExpense.isPending ? "جاري الإضافة…" : "إضافة المصروف"}</button>
         </form>
-        {createExpense.error && <p className="form-error">ما قدرنا نضيف المصروف. راجعي البيانات وحاولي مرة ثانية.</p>}
+        {createExpense.error && <p className="form-error">{createExpense.error.message || "ما قدرنا نضيف المصروف. راجعي البيانات وحاولي مرة ثانية."}</p>}
       </section>
 
       <section className="expense-list-card">
