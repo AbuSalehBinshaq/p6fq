@@ -5,7 +5,10 @@ import { notifyRenderOwner } from "./renderNotify";
 import { contactMethodLabels, formatChildAgeRange, type OrderStatus } from "../shared/orderFlow";
 
 const TELEGRAM_API = "https://api.telegram.org";
-const OWNER_ID = process.env.TELEGRAM_OWNER_ID?.trim() ?? "";
+const RAW_OWNER_ID = process.env.TELEGRAM_OWNER_ID?.trim() ?? "";
+// Supergroup IDs are commonly supplied as -100..., even if a dashboard omits the minus sign.
+const OWNER_ID = /^100\d{10,}$/.test(RAW_OWNER_ID) ? `-${RAW_OWNER_ID}` : RAW_OWNER_ID;
+if (RAW_OWNER_ID !== OWNER_ID) console.warn("[Telegram] Normalized TELEGRAM_OWNER_ID as a Supergroup chat ID.");
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN?.trim() ?? "";
 const RAW_WEBHOOK_SECRET = process.env.TELEGRAM_WEBHOOK_SECRET?.trim() ?? "";
 // Telegram accepts only A-Z, a-z, 0-9, _ and - in secret_token.
