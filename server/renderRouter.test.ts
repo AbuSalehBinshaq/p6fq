@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-const db = vi.hoisted(() => ({ createRenderConversationOrder: vi.fn(), markRenderOwnerNotified: vi.fn(), markRenderTelegramOpened: vi.fn() }));
+const db = vi.hoisted(() => ({ createRenderConversationOrder: vi.fn(), markRenderOwnerNotified: vi.fn(), markRenderTelegramOpened: vi.fn(), getRenderSiteSettings: vi.fn(() => ({ telegramHandle: "AtharAe_bot" })) }));
 const notifier = vi.hoisted(() => ({ notifyRenderOwner: vi.fn() }));
 const referral = vi.hoisted(() => ({ readReferralCode: vi.fn() }));
 
