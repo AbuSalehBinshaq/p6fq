@@ -1,6 +1,7 @@
 import { Pool } from "pg";
 import type { ConversationRequest, OrderStatus } from "../shared/orderFlow";
 import type { ExpenseInput, PaymentStatus } from "../shared/finance";
+import { defaultSiteSettings, sanitizeSiteSettings, type SiteSettings } from "../shared/siteSettings";
 
 type RenderOrder = ConversationRequest & { reference: string; referralCode: string | null };
 export type RenderOrderRecord = RenderOrder & { status: OrderStatus; adminNotes: string | null; orderAmount: number; paymentStatus: PaymentStatus; createdAt: Date; ownerNotifiedAt: Date | null; telegramOpenedAt: Date | null };
@@ -41,7 +42,34 @@ export async function migrateRenderDatabase() {
   await getRenderPool().query("ALTER TABLE conversation_orders ADD COLUMN IF NOT EXISTS order_amount NUMERIC(12, 2) NOT NULL DEFAULT 0");
   await getRenderPool().query("ALTER TABLE conversation_orders ADD COLUMN IF NOT EXISTS payment_status VARCHAR(20) NOT NULL DEFAULT 'unpaid'");
   await getRenderPool().query(`CREATE TABLE IF NOT EXISTS finance_expenses (id BIGSERIAL PRIMARY KEY, description VARCHAR(160) NOT NULL, category VARCHAR(80) NOT NULL, amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), expense_date DATE NOT NULL, notes VARCHAR(500) NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
+  await getRenderPool().query(`CREATE TABLE IF NOT EXISTS site_settings (setting_key VARCHAR(80) PRIMARY KEY, setting_value TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
+  for (const [key, value] of Object.entries(defaultSiteSettings)) {
+    await getRenderPool().query(`INSERT INTO site_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO NOTHING`, [key, value]);
+  }
   await migrateTelegramBotDatabase();
+}
+
+export async function getRenderSiteSettings(): Promise<SiteSettings> {
+  const result = await getRenderPool().query<{ settingKey: string; settingValue: string }>(`SELECT setting_key AS "settingKey", setting_value AS "settingValue" FROM site_settings`);
+  return sanitizeSiteSettings(Object.fromEntries(result.rows.map(row => [row.settingKey, row.settingValue])));
+}
+
+export async function updateRenderSiteSettings(values: Partial<SiteSettings>): Promise<SiteSettings> {
+  const settings = sanitizeSiteSettings(values as Record<string, unknown>);
+  const client = await getRenderPool().connect();
+  try {
+    await client.query("BEGIN");
+    for (const [key, value] of Object.entries(settings)) {
+      await client.query(`INSERT INTO site_settings (setting_key, setting_value, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (setting_key) DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = NOW()`, [key, value]);
+    }
+    await client.query("COMMIT");
+  } catch (error) {
+    await client.query("ROLLBACK");
+    throw error;
+  } finally {
+    client.release();
+  }
+  return settings;
 }
 
 export async function migrateTelegramBotDatabase() {

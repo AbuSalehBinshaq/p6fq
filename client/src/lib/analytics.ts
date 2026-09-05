@@ -2,7 +2,7 @@ import { campaignParametersToQuery, hasCampaignParameters, readCampaignParameter
 
 declare global {
   interface Window {
-    gtag?: (command: "config" | "event", target: string, parameters?: Record<string, string>) => void;
+    gtag?: (...args: unknown[]) => void;
   }
 }
 

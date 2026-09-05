@@ -15,10 +15,13 @@ import {
   markRenderOwnerNotified,
   markRenderTelegramOpened,
   updateRenderConversationOrder,
+  getRenderSiteSettings,
+  updateRenderSiteSettings,
 } from "./renderDb";
 import { hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
 import { readReferralCode } from "./referral";
+import { defaultSiteSettings, sanitizeSiteSettings } from "../shared/siteSettings";
 
 const t = initTRPC.context<{ req: Request }>().create({ transformer: superjson });
 const dashboardProcedure = t.procedure.use(({ ctx, next }) => {
@@ -34,6 +37,9 @@ const orderFinancialsSchema = z.object({
 });
 
 export const renderRouter = t.router({
+  site: t.router({
+    settings: t.procedure.query(() => getRenderSiteSettings()),
+  }),
   orders: t.router({
     startConversation: t.procedure.input(conversationRequestSchema).mutation(async ({ input, ctx }) => {
       const reference = `BS-${nanoid(7).toUpperCase()}`;
@@ -52,7 +58,8 @@ export const renderRouter = t.router({
       });
       if (notified) await markRenderOwnerNotified(reference);
 
-      return { reference, telegramUrl: buildConversationTelegramUrl(input, reference) };
+      const siteSettings = typeof getRenderSiteSettings === "function" ? await getRenderSiteSettings() : null;
+      return { reference, telegramUrl: buildConversationTelegramUrl(input, reference, siteSettings?.telegramHandle) };
     }),
     markTelegramOpened: t.procedure.input(z.object({ reference: referenceSchema })).mutation(async ({ input }) => {
       await markRenderTelegramOpened(input.reference);
@@ -75,6 +82,11 @@ export const renderRouter = t.router({
   }),
   summary: t.router({
     monthly: dashboardProcedure.input(z.object({ month: monthSchema })).query(({ input }) => getRenderMonthlySummary(input.month)),
+  }),
+  settings: t.router({
+    get: dashboardProcedure.query(() => getRenderSiteSettings()),
+    update: dashboardProcedure.input(z.record(z.string(), z.unknown())).mutation(({ input }) => updateRenderSiteSettings(sanitizeSiteSettings(input))),
+    defaults: dashboardProcedure.query(() => defaultSiteSettings),
   }),
 });
 

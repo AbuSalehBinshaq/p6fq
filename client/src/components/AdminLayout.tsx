@@ -1,10 +1,11 @@
-import { BarChart3, ClipboardList, Home, ReceiptText, Sparkles } from "lucide-react";
+import { BarChart3, ClipboardList, Home, ReceiptText, Settings, Sparkles } from "lucide-react";
 import { useLocation } from "wouter";
 
 const navItems = [
   { href: "/summary", label: "ملخص الشهر", icon: BarChart3 },
   { href: "/orders", label: "الطلبات", icon: ClipboardList },
   { href: "/expenses", label: "المصاريف", icon: ReceiptText },
+  { href: "/settings", label: "الإعدادات", icon: Settings },
 ];
 
 export default function AdminLayout({ children, title, description }: { children: React.ReactNode; title: string; description: string }) {
