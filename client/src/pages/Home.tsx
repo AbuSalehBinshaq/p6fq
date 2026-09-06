@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { campaignQueryString, trackCampaignLanding, trackEvent } from "@/lib/analytics";
+import { useSiteSettings } from "@/lib/siteSettings";
 import { contentImageLoadingProps, heroImageLoadingProps } from "@shared/imageLoading";
 import { childAgeRanges, type ConversationRequest } from "@shared/orderFlow";
 import { supportedPaymentMethods } from "@shared/paymentMethods";
@@ -68,6 +69,7 @@ const initialForm: ConversationRequest = {
 };
 
 export default function Home() {
+  const settings = useSiteSettings();
   const conversationRef = useRef<HTMLElement>(null);
   const formViewed = useRef(false);
   const formStarted = useRef(false);
@@ -110,7 +112,7 @@ export default function Home() {
 
   return (
     <main dir="rtl" className="landing-shell">
-      <div className="top-strip"><span>بداية لطيفة، بلا التزام</span><b>تفاهم شخصي قبل الصورة والدفع</b><span>·</span><span>رد خلال 24 ساعة كحد أقصى</span></div>
+      <div className="top-strip">{settings.announcement}</div>
       <nav className="site-nav page-width" aria-label="التنقل الرئيسي">
         <a href="#top" className="brand"><span className="brand-icon"><Sparkles size={18} /></span><span>بطل قصتي</span></a>
         <div className="nav-links"><a href="#what-you-get">شو بتستلمين؟</a><a href="#examples">أمثلة حقيقية</a><a href="#how">كيف نبدأ؟</a><a href="#trust">طمأنينة لك</a></div>
@@ -120,7 +122,7 @@ export default function Home() {
       <section id="top" className="hero page-width">
         <div className="hero-copy">
           <div className="eyebrow"><span>✦</span> حكاية عربية لا تشبه أي حكاية أخرى</div>
-          <h1>مو بس قصة باسم طفلك.<br /><em>هذه ذكرى تقول له: أنت مهم.</em></h1>
+          <h1>{settings.heroTitle}<br /><em>{settings.heroSubtitle}</em></h1>
           <p className="hero-lede">نحوّل اهتمامه الصغير إلى مغامرة عربية دافئة، يكون هو بطلها. نتفاهم معك شخصياً أولاً، ثم نطلب الصورة داخل تيليجرام، ونرسل لك معاينة قبل أي دفع.</p>
           <div className="human-promise"><div className="promise-number">01</div><p><b>ما تحتاجين تعرفين أي شيء تقني.</b><br />قولي لنا شو يحب طفلك، ونحن نمشي معك خطوة بخطوة.</p></div>
           <div className="hero-actions"><Button className="primary-button" onClick={scrollToConversation}>خلينا نتفاهم عن قصته <MessageCircle size={19} /></Button><a href="#examples" className="quiet-link"><span>↓</span> شوفي النتيجة أولاً</a></div>
