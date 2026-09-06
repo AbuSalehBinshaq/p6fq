@@ -1,6 +1,6 @@
 export const defaultSiteSettings = {
   brandName: "بطل قصتي",
-  priceAed: "17",
+  priceAed: "23.60",
   pdfPages: "8",
   responseHours: "24",
   telegramHandle: "AtharAe_bot",

@@ -5,6 +5,6 @@ export const heroImageLoadingProps = {
 } as const;
 
 export const contentImageLoadingProps = {
-  loading: "eager",
+  loading: "lazy",
   decoding: "async",
 } as const;

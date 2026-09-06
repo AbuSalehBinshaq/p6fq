@@ -6,7 +6,7 @@ describe("image loading priorities", () => {
     expect(heroImageLoadingProps).toEqual({ loading: "eager", fetchPriority: "high", decoding: "async" });
   });
 
-  it("loads content visuals immediately while preserving asynchronous decoding", () => {
-    expect(contentImageLoadingProps).toEqual({ loading: "eager", decoding: "async" });
+  it("loads content visuals lazily while preserving asynchronous decoding", () => {
+    expect(contentImageLoadingProps).toEqual({ loading: "lazy", decoding: "async" });
   });
 });
