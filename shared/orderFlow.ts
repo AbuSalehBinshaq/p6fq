@@ -48,6 +48,6 @@ export function buildConversationTelegramMessage(input: ConversationRequest, ref
   ].join("\n");
 }
 
-export function buildConversationTelegramUrl(_input: ConversationRequest, reference: string) {
-  return `https://t.me/${SELLER_TELEGRAM_HANDLE}?start=${encodeURIComponent(reference)}`;
+export function buildConversationTelegramUrl(_input: ConversationRequest, reference: string, handle = SELLER_TELEGRAM_HANDLE) {
+  return `https://t.me/${handle.replace(/^@/, "")}?start=${encodeURIComponent(reference)}`;
 }

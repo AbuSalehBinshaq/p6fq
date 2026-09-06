@@ -22,7 +22,7 @@ export const expenseInputSchema = z.object({
   description: z.string().trim().min(2, "اكتب وصف المصروف.").max(160),
   category: z.enum(expenseCategories),
   amount: z.number().finite().positive("أدخل مبلغاً أكبر من صفر.").max(999999999),
-  expenseDate: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/, "اختر تاريخاً صحيحاً."),
+  expenseDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "اختر تاريخاً صحيحاً."),
   notes: z.string().trim().max(500),
 });
 

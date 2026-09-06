@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { campaignQueryString, trackCampaignLanding, trackEvent } from "@/lib/analytics";
+import { useSiteSettings } from "@/lib/siteSettings";
 import { contentImageLoadingProps, heroImageLoadingProps } from "@shared/imageLoading";
 import { childAgeRanges, type ConversationRequest } from "@shared/orderFlow";
 import { ArrowLeft, Check, ChevronDown, Clock3, Heart, ImagePlus, LockKeyhole, MessageCircle, Quote, Sparkles, Star, X } from "lucide-react";
@@ -8,11 +9,11 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 
 const ASSETS = {
-  hero: "/assets/batal-story-hero.png",
-  saeedOriginal: "/assets/story1-original.jpeg",
-  saeedPages: ["/assets/story1-page-01.png", "/assets/story1-page-02.png", "/assets/story1-page-03.png"],
-  salehOriginal: "/assets/story2-original.jpg",
-  salehPages: ["/assets/story2-page-01.png", "/assets/story2-page-02.png", "/assets/story2-page-03.png"],
+  hero: "/assets/batal-story-hero.webp",
+  saeedOriginal: "/assets/story1-original.webp",
+  saeedPages: ["/assets/story1-page-01.webp", "/assets/story1-page-02.webp", "/assets/story1-page-03.webp"],
+  salehOriginal: "/assets/story2-original.webp",
+  salehPages: ["/assets/story2-page-01.webp", "/assets/story2-page-02.webp", "/assets/story2-page-03.webp"],
 };
 
 const offer = { before: 47.2, after: 23.6, durationHours: 48 };
@@ -47,6 +48,7 @@ function formatTime(value: number) {
 }
 
 export default function Home() {
+  const settings = useSiteSettings();
   const conversationRef = useRef<HTMLElement>(null);
   const formViewed = useRef(false);
   const formStarted = useRef(false);
@@ -96,7 +98,7 @@ export default function Home() {
 
   return (
     <main dir="rtl" className="landing-shell">
-      <div className="top-strip"><b>عرض الإطلاق لفترة محدودة</b><span>تفاهم شخصي قبل الصورة والدفع</span><span>رد خلال 24 ساعة</span></div>
+      <div className="top-strip"><b>عرض الإطلاق لفترة محدودة</b><span>{settings.announcement}</span><span>رد خلال 24 ساعة</span></div>
       <nav className="site-nav page-width" aria-label="التنقل الرئيسي">
         <a href="#top" className="brand"><span className="brand-icon"><Sparkles size={18} /></span><span>بطل قصتي</span></a>
         <div className="nav-links"><a href="#offer">السعر</a><a href="#examples">أمثلة</a><a href="#reviews">آراء العملاء</a><a href="#conversation">ابدئي الآن</a></div>
@@ -106,8 +108,9 @@ export default function Home() {
       <section id="top" className="hero page-width compact-hero">
         <div className="hero-copy">
           <div className="eyebrow"><span>✦</span> قصة عربية مخصصة لطفلك</div>
-          <h1>مو بس قصة باسم طفلك.<br /><em>هذه ذكرى تقول له: أنت مهم.</em></h1>
+          <h1>{settings.heroTitle}<br /><em>{settings.heroSubtitle}</em></h1>
           <p className="hero-lede">نحوّل اهتمامه الصغير إلى مغامرة عربية دافئة يكون هو بطلها. نتفاهم معك أولاً، ثم نرسل لك معاينة قبل الدفع.</p>
+          <div className="human-promise"><div className="promise-number">01</div><p><b>ما تحتاجين تعرفين أي شيء تقني.</b><br />قولي لنا شو يحب طفلك، ونحن نمشي معك خطوة بخطوة.</p></div>
           <div className="hero-actions"><Button className="primary-button" onClick={scrollToConversation}>خلينا نبدأ قصته <MessageCircle size={19} /></Button><a href="#examples" className="quiet-link"><span>↓</span> شوفي النتيجة</a></div>
           <div className="hero-anchors"><span><Check size={15} /> لا صورة في الموقع</span><span><Check size={15} /> لا دفع الآن</span><span><Check size={15} /> تواصل بشري</span></div>
         </div>

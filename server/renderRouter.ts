@@ -18,6 +18,7 @@ import {
 } from "./renderDb";
 import { hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
+import { sendTelegramReply } from "./telegramBot";
 import { readReferralCode } from "./referral";
 
 const t = initTRPC.context<{ req: Request }>().create({ transformer: superjson });
@@ -34,6 +35,12 @@ const orderFinancialsSchema = z.object({
 });
 
 export const renderRouter = t.router({
+  telegram: t.router({
+    sendReply: dashboardProcedure.input(z.object({ chatId: z.string().regex(/^\d+$/), message: z.string().trim().min(1).max(4000) })).mutation(async ({ input }) => {
+      await sendTelegramReply(input.chatId, input.message);
+      return { success: true } as const;
+    }),
+  }),
   orders: t.router({
     startConversation: t.procedure.input(conversationRequestSchema).mutation(async ({ input, ctx }) => {
       const reference = `BS-${nanoid(7).toUpperCase()}`;

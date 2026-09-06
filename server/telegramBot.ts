@@ -113,6 +113,12 @@ async function sendMessage(chatId: string | number, text: string, replyMarkup?: 
   });
 }
 
+export async function sendTelegramReply(chatId: string, text: string) {
+  if (!/^\d+$/.test(chatId)) throw new Error("معرّف محادثة Telegram غير صالح");
+  if (!text.trim()) throw new Error("نص الرد فارغ");
+  await sendMessage(chatId, text.trim());
+}
+
 async function notifyOwner(text: string) {
   if (!OWNER_ID) return false;
   try {
@@ -288,7 +294,7 @@ async function handleMessage(message: TelegramMessage) {
         humanMode: true,
         lastMessageAt: new Date(),
       });
-      await notifyOwner(`🔗 فتح العميل رقم ${linkedOrder.reference} محادثة البوت.\nالعميل: ${contactValue(linkedConversation)}\nالطفل: ${linkedOrder.childName} (${formatChildAgeRange(linkedOrder.childAge)})`);
+      await notifyOwner(`🔗 فتح العميل رقم ${linkedOrder.reference} محادثة البوت.\nالعميل: ${contactValue(linkedConversation)}\nChat ID: ${linkedConversation.chatId}\nالطفل: ${linkedOrder.childName} (${formatChildAgeRange(linkedOrder.childAge)})\n\nللرد من القروب:\n/reply ${linkedConversation.chatId} نص الرد`);
       await sendMessage(message.chat.id, `وصلني طلبك رقم ${linkedOrder.reference}. أرسلت التفاصيل لصاحب المشروع، وبيتواصل معك شخصيًا. لا ترسلين صورة الطفل الآن؛ نطلبها بعد التفاهم المبدئي.`, contactKeyboard);
       return;
     }
