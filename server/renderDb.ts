@@ -46,6 +46,7 @@ export async function migrateRenderDatabase() {
   for (const [key, value] of Object.entries(defaultSiteSettings)) {
     await getRenderPool().query(`INSERT INTO site_settings (setting_key, setting_value) VALUES ($1, $2) ON CONFLICT (setting_key) DO NOTHING`, [key, value]);
   }
+  await getRenderPool().query(`UPDATE site_settings SET setting_value = $1, updated_at = NOW() WHERE setting_key = 'priceAed' AND setting_value = $2`, [defaultSiteSettings.priceAed, '17']);
   await migrateTelegramBotDatabase();
 }
 

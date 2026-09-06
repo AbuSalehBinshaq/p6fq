@@ -7,6 +7,8 @@ import { buildConversationTelegramUrl, conversationRequestSchema, orderStatusVal
 import { expenseCategories, expenseInputSchema, paymentStatusValues } from "../shared/finance";
 import {
   createRenderConversationOrder,
+  getRenderSiteSettings,
+  updateRenderSiteSettings,
   createRenderExpense,
   deleteRenderExpense,
   getRenderMonthlySummary,
@@ -20,6 +22,7 @@ import { hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
 import { sendTelegramReply } from "./telegramBot";
 import { readReferralCode } from "./referral";
+import { defaultSiteSettings, type SiteSettings } from "../shared/siteSettings";
 
 const t = initTRPC.context<{ req: Request }>().create({ transformer: superjson });
 const dashboardProcedure = t.procedure.use(({ ctx, next }) => {
@@ -33,8 +36,29 @@ const orderFinancialsSchema = z.object({
   orderAmount: z.number().finite().min(0).max(999999999),
   paymentStatus: z.enum(paymentStatusValues),
 });
+const siteSettingsSchema = z.object({
+  brandName: z.string().max(1000),
+  priceAed: z.string().max(1000),
+  pdfPages: z.string().max(1000),
+  responseHours: z.string().max(1000),
+  telegramHandle: z.string().max(1000),
+  announcement: z.string().max(1000),
+  heroTitle: z.string().max(1000),
+  heroSubtitle: z.string().max(1000),
+  metaDescription: z.string().max(1000),
+  gaMeasurementId: z.string().max(1000),
+  clarityProjectId: z.string().max(1000),
+});
 
 export const renderRouter = t.router({
+  site: t.router({
+    settings: t.procedure.query(() => getRenderSiteSettings()),
+  }),
+  settings: t.router({
+    get: dashboardProcedure.query(() => getRenderSiteSettings()),
+    defaults: dashboardProcedure.query(() => defaultSiteSettings),
+    update: dashboardProcedure.input(siteSettingsSchema).mutation(({ input }) => updateRenderSiteSettings(input as SiteSettings)),
+  }),
   telegram: t.router({
     sendReply: dashboardProcedure.input(z.object({ chatId: z.string().regex(/^\d+$/), message: z.string().trim().min(1).max(4000) })).mutation(async ({ input }) => {
       await sendTelegramReply(input.chatId, input.message);
