@@ -8,6 +8,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { captureReferralFromRequest, normalizeReferralCode, setReferralCookie } from "../referral";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -34,6 +35,16 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  app.get("/partner/:code", (req, res) => {
+    const code = normalizeReferralCode(req.params.code);
+    if (!code) return res.redirect("/");
+    setReferralCookie(res, code);
+    return res.redirect("/");
+  });
+  app.use((req, res, next) => {
+    if (req.method === "GET") captureReferralFromRequest(req, res);
+    next();
+  });
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   // tRPC API

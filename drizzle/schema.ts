@@ -34,6 +34,7 @@ export const conversationOrders = mysqlTable("conversationOrders", {
   childInterest: varchar("childInterest", { length: 180 }).notNull(),
   contactMethod: mysqlEnum("contactMethod", contactMethods).notNull(),
   contactValue: varchar("contactValue", { length: 120 }).notNull(),
+  referralCode: varchar("referralCode", { length: 48 }),
   privacyConsent: boolean("privacyConsent").notNull().default(false),
   status: mysqlEnum("status", orderStatuses).notNull().default("conversation_started"),
   ownerNotifiedAt: timestamp("ownerNotifiedAt"),
@@ -43,7 +44,20 @@ export const conversationOrders = mysqlTable("conversationOrders", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+export const referralPartners = mysqlTable("referralPartners", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 48 }).notNull().unique(),
+  name: varchar("name", { length: 120 }).notNull(),
+  commissionType: mysqlEnum("commissionType", ["fixed", "percent"]).notNull().default("fixed"),
+  commissionValue: varchar("commissionValue", { length: 20 }).notNull().default("0"),
+  active: boolean("active").notNull().default(true),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type ConversationOrder = typeof conversationOrders.$inferSelect;
 export type InsertConversationOrder = typeof conversationOrders.$inferInsert;
+export type ReferralPartner = typeof referralPartners.$inferSelect;
+export type InsertReferralPartner = typeof referralPartners.$inferInsert;

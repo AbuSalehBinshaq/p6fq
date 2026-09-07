@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { conversationOrders, type ConversationOrder, type InsertConversationOrder, type InsertUser, users } from "../drizzle/schema";
+import { conversationOrders, referralPartners, type ConversationOrder, type InsertConversationOrder, type InsertReferralPartner, type InsertUser, type ReferralPartner, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -72,8 +72,28 @@ export async function listConversationOrders() {
   return db.select().from(conversationOrders).orderBy(desc(conversationOrders.createdAt));
 }
 
-export async function updateConversationOrder(reference: string, update: Pick<ConversationOrder, "status" | "adminNotes">) {
+export async function updateConversationOrder(reference: string, update: Pick<ConversationOrder, "status" | "adminNotes" | "referralCode">) {
   const db = await getDb();
   if (!db) throw new Error("تعذر تحديث الطلب الآن.");
   await db.update(conversationOrders).set(update).where(eq(conversationOrders.reference, reference));
+}
+
+export async function listReferralPartners() {
+  const db = await getDb();
+  if (!db) return [] as ReferralPartner[];
+  return db.select().from(referralPartners).orderBy(desc(referralPartners.createdAt));
+}
+
+export async function createReferralPartner(partner: InsertReferralPartner) {
+  const db = await getDb();
+  if (!db) throw new Error("تعذر حفظ الشريك الآن.");
+  await db.insert(referralPartners).values(partner);
+  const result = await db.select().from(referralPartners).where(eq(referralPartners.code, partner.code)).limit(1);
+  return result[0] as ReferralPartner;
+}
+
+export async function updateReferralPartner(id: number, update: Partial<Pick<ReferralPartner, "name" | "commissionType" | "commissionValue" | "active">>) {
+  const db = await getDb();
+  if (!db) throw new Error("تعذر تحديث الشريك الآن.");
+  await db.update(referralPartners).set(update).where(eq(referralPartners.id, id));
 }

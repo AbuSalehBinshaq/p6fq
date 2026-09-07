@@ -65,7 +65,9 @@ export function captureReferralFromRequest(req: Request, res: Response) {
   const legacyRef = typeof req.query.ref === "string" && !/^BS-[A-Z0-9_-]+$/i.test(req.query.ref) ? req.query.ref : undefined;
   const queryCode = normalizeReferralCode(req.query.partner ?? req.query.referral ?? legacyRef);
   const existingCode = readReferralCode(req);
-  if (!queryCode || existingCode) return existingCode;
-  setReferralCookie(res, queryCode);
-  return queryCode;
+  if (queryCode) {
+    if (queryCode !== existingCode) setReferralCookie(res, queryCode);
+    return queryCode;
+  }
+  return existingCode;
 }

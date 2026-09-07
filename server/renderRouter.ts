@@ -17,6 +17,9 @@ import {
   markRenderOwnerNotified,
   markRenderTelegramOpened,
   updateRenderConversationOrder,
+  listRenderReferralPartners,
+  createRenderReferralPartner,
+  updateRenderReferralPartner,
 } from "./renderDb";
 import { hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
@@ -94,6 +97,11 @@ export const renderRouter = t.router({
       await updateRenderConversationOrder(input.reference, input.status, input.adminNotes, input.orderAmount, input.paymentStatus);
       return { success: true } as const;
     }),
+  }),
+  partners: t.router({
+    list: dashboardProcedure.query(() => listRenderReferralPartners()),
+    create: dashboardProcedure.input(z.object({ name: z.string().trim().min(1).max(120), commissionType: z.enum(["fixed", "percent"]), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/) })).mutation(({ input }) => createRenderReferralPartner({ ...input, code: `p-${nanoid(8).toLowerCase()}` })),
+    update: dashboardProcedure.input(z.object({ id: z.number().int().positive(), name: z.string().trim().min(1).max(120).optional(), commissionType: z.enum(["fixed", "percent"]).optional(), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(), active: z.boolean().optional() })).mutation(({ input }) => { const { id, ...changes } = input; return updateRenderReferralPartner(id, changes); }),
   }),
   expenses: t.router({
     list: dashboardProcedure.input(z.object({ month: monthSchema.optional() }).optional()).query(({ input }) => listRenderExpenses(input?.month)),

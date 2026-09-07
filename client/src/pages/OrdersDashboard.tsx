@@ -7,7 +7,7 @@ import { useMemo, useState } from "react";
 
 type OrderDraft = { status: OrderStatus; paymentStatus: PaymentStatus; orderAmount: string; adminNotes: string };
 
-function initialDraft(order: { status: OrderStatus; paymentStatus: PaymentStatus; orderAmount: number; adminNotes: string | null }): OrderDraft {
+function initialDraft(order: { status: OrderStatus; paymentStatus: PaymentStatus; orderAmount: number; adminNotes: string | null; referralCode?: string | null }): OrderDraft {
   return { status: order.status, paymentStatus: order.paymentStatus ?? "unpaid", orderAmount: String(order.orderAmount ?? 0), adminNotes: order.adminNotes ?? "" };
 }
 
