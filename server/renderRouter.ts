@@ -21,13 +21,13 @@ import {
   createRenderReferralPartner,
   updateRenderReferralPartner,
 } from "./renderDb";
-import { hasDashboardAccess } from "./renderAuth";
+import { buildAdminSessionCookie, clearAdminSessionCookie, hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
 import { sendTelegramReply } from "./telegramBot";
 import { readReferralCode } from "./referral";
 import { defaultSiteSettings, type SiteSettings } from "../shared/siteSettings";
 
-const t = initTRPC.context<{ req: Request }>().create({ transformer: superjson });
+const t = initTRPC.context<{ req: Request; res?: import("express").Response }>().create({ transformer: superjson });
 const dashboardProcedure = t.procedure.use(({ ctx, next }) => {
   if (!hasDashboardAccess(ctx.req)) throw new TRPCError({ code: "UNAUTHORIZED" });
   return next();
@@ -54,6 +54,15 @@ const siteSettingsSchema = z.object({
 });
 
 export const renderRouter = t.router({
+  auth: t.router({
+    status: t.procedure.query(({ ctx }) => ({ authenticated: hasDashboardAccess(ctx.req) })),
+    login: t.procedure.input(z.object({ password: z.string().min(1).max(200) })).mutation(({ input, ctx }) => {
+      if (!process.env.ORDERS_DASHBOARD_PASSWORD || input.password !== process.env.ORDERS_DASHBOARD_PASSWORD) throw new TRPCError({ code: "UNAUTHORIZED", message: "كلمة المرور غير صحيحة." });
+      ctx.res?.setHeader("Set-Cookie", buildAdminSessionCookie());
+      return { success: true } as const;
+    }),
+    logout: t.procedure.mutation(({ ctx }) => { ctx.res?.setHeader("Set-Cookie", clearAdminSessionCookie()); return { success: true } as const; }),
+  }),
   site: t.router({
     settings: t.procedure.query(() => getRenderSiteSettings()),
   }),
