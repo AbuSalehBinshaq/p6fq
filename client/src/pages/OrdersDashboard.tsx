@@ -5,10 +5,10 @@ import { formatCurrency, paymentStatusLabels, type PaymentStatus } from "@shared
 import { CheckCircle2, ExternalLink, MessageCircle, RefreshCw, Search, Send, WalletCards } from "lucide-react";
 import { useMemo, useState } from "react";
 
-type OrderDraft = { status: OrderStatus; paymentStatus: PaymentStatus; orderAmount: string; adminNotes: string; referralCode: string };
+type OrderDraft = { status: OrderStatus; paymentStatus: PaymentStatus; orderAmount: string; adminNotes: string };
 
 function initialDraft(order: { status: OrderStatus; paymentStatus: PaymentStatus; orderAmount: number; adminNotes: string | null; referralCode?: string | null }): OrderDraft {
-  return { status: order.status, paymentStatus: order.paymentStatus ?? "unpaid", orderAmount: String(order.orderAmount ?? 0), adminNotes: order.adminNotes ?? "", referralCode: order.referralCode ?? "" };
+  return { status: order.status, paymentStatus: order.paymentStatus ?? "unpaid", orderAmount: String(order.orderAmount ?? 0), adminNotes: order.adminNotes ?? "" };
 }
 
 export default function OrdersDashboard() {
@@ -48,7 +48,7 @@ export default function OrdersDashboard() {
   };
   const saveOrder = (order: (typeof filteredOrders)[number]) => {
     const draft = draftFor(order);
-    update.mutate({ reference: order.reference, status: draft.status, adminNotes: draft.adminNotes, orderAmount: Number(draft.orderAmount) || 0, paymentStatus: draft.paymentStatus, referralCode: draft.referralCode.trim() || null });
+    update.mutate({ reference: order.reference, status: draft.status, adminNotes: draft.adminNotes, orderAmount: Number(draft.orderAmount) || 0, paymentStatus: draft.paymentStatus });
   };
 
   return <AdminLayout title="الطلبات" description="تابعي كل طلب من أول محادثة إلى التسليم، وسجّلي قيمته المالية من نفس المكان.">
