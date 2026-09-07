@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 
 const navItems = [
-  { href: "/admin/summary", label: "ملخص الشهر", icon: BarChart3 }, { href: "/admin/orders", label: "الطلبات", icon: ClipboardList }, { href: "/admin/expenses", label: "المصاريف", icon: ReceiptText }, { href: "/admin/marketing", label: "التسويق", icon: Megaphone }, { href: "/admin/settings", label: "الإعدادات", icon: Settings },
+  { href: "/admin/summary", label: "ملخص الشهر", icon: BarChart3 }, { href: "/admin/orders", label: "الطلبات", icon: ClipboardList }, { href: "/admin/expenses", label: "المصاريف", icon: ReceiptText }, { href: "/admin/marketing", label: "المسوقون والعمولات", icon: Megaphone }, { href: "/admin/settings", label: "الإعدادات", icon: Settings },
 ];
 export default function AdminLayout({ children, title, description }: { children: React.ReactNode; title: string; description: string }) {
   const [location, setLocation] = useLocation(); const status = trpc.auth.status.useQuery(); const logout = trpc.auth.logout.useMutation({ onSuccess: () => setLocation("/admin/login") });

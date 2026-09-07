@@ -17,6 +17,9 @@ import {
   markRenderOwnerNotified,
   markRenderTelegramOpened,
   updateRenderConversationOrder,
+  listRenderMarketers,
+  createRenderMarketer,
+  updateRenderMarketer,
   listRenderReferralPartners,
   createRenderReferralPartner,
   updateRenderReferralPartner,
@@ -54,6 +57,11 @@ const siteSettingsSchema = z.object({
 });
 
 export const renderRouter = t.router({
+  marketers: t.router({
+    list: dashboardProcedure.query(() => listRenderMarketers()),
+    create: dashboardProcedure.input(z.object({ name: z.string().trim().min(2).max(120), code: z.string().trim().regex(/^[a-z0-9_-]{2,48}$/i), commissionPercent: z.number().min(0).max(100) })).mutation(({ input }) => createRenderMarketer(input)),
+    update: dashboardProcedure.input(z.object({ id: z.number().int().positive(), name: z.string().trim().min(2).max(120), code: z.string().trim().regex(/^[a-z0-9_-]{2,48}$/i), commissionPercent: z.number().min(0).max(100), active: z.boolean() })).mutation(({ input }) => updateRenderMarketer(input.id, input)),
+  }),
   auth: t.router({
     status: t.procedure.query(({ ctx }) => ({ authenticated: hasDashboardAccess(ctx.req) })),
     login: t.procedure.input(z.object({ password: z.string().min(1).max(200) })).mutation(({ input, ctx }) => {
