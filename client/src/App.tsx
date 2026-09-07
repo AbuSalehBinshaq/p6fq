@@ -12,6 +12,7 @@ import OrdersDashboard from "./pages/OrdersDashboard";
 import ExpensesDashboard from "./pages/ExpensesDashboard";
 import MonthlySummary from "./pages/MonthlySummary";
 import SettingsDashboard from "./pages/SettingsDashboard";
+import PartnersDashboard from "./pages/PartnersDashboard";
 import SiteRuntime from "./components/SiteRuntime";
 import { useEffect } from "react";
 
@@ -31,6 +32,7 @@ function Router() {
       <Route path="/orders" component={OrdersDashboard} />
       <Route path="/expenses" component={ExpensesDashboard} />
       <Route path="/settings" component={SettingsDashboard} />
+      <Route path="/partners" component={PartnersDashboard} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

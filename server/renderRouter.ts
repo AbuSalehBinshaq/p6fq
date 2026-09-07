@@ -17,6 +17,10 @@ import {
   markRenderOwnerNotified,
   markRenderTelegramOpened,
   updateRenderConversationOrder,
+  updateRenderOrderReferral,
+  listRenderReferralPartners,
+  createRenderReferralPartner,
+  updateRenderReferralPartner,
 } from "./renderDb";
 import { hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
@@ -90,10 +94,16 @@ export const renderRouter = t.router({
       return { success: true } as const;
     }),
     list: dashboardProcedure.query(() => listRenderConversationOrders()),
-    update: dashboardProcedure.input(z.object({ reference: referenceSchema, status: z.enum(orderStatusValues), adminNotes: z.string().trim().max(1000), ...orderFinancialsSchema.shape })).mutation(async ({ input }) => {
+    update: dashboardProcedure.input(z.object({ reference: referenceSchema, status: z.enum(orderStatusValues), adminNotes: z.string().trim().max(1000), referralCode: z.string().max(48).nullable().optional(), ...orderFinancialsSchema.shape })).mutation(async ({ input }) => {
       await updateRenderConversationOrder(input.reference, input.status, input.adminNotes, input.orderAmount, input.paymentStatus);
+      if (input.referralCode !== undefined) await updateRenderOrderReferral(input.reference, input.referralCode);
       return { success: true } as const;
     }),
+  }),
+  partners: t.router({
+    list: dashboardProcedure.query(() => listRenderReferralPartners()),
+    create: dashboardProcedure.input(z.object({ name: z.string().trim().min(1).max(120), code: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{2,47}$/i).transform(value => value.toLowerCase()), commissionType: z.enum(["fixed", "percent"]), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/) })).mutation(({ input }) => createRenderReferralPartner(input)),
+    update: dashboardProcedure.input(z.object({ id: z.number().int().positive(), name: z.string().trim().min(1).max(120).optional(), commissionType: z.enum(["fixed", "percent"]).optional(), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(), active: z.boolean().optional() })).mutation(({ input }) => { const { id, ...changes } = input; return updateRenderReferralPartner(id, changes); }),
   }),
   expenses: t.router({
     list: dashboardProcedure.input(z.object({ month: monthSchema.optional() }).optional()).query(({ input }) => listRenderExpenses(input?.month)),

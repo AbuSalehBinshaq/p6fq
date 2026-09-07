@@ -2,7 +2,8 @@ import { customAlphabet } from "nanoid";
 import { z } from "zod";
 import { conversationOrders, orderStatuses } from "../drizzle/schema";
 import { buildConversationTelegramUrl, conversationRequestSchema } from "../shared/orderFlow";
-import { getDb, createConversationOrder, listConversationOrders, markOrderOwnerNotified, markOrderTelegramOpened, updateConversationOrder } from "./db";
+import { createConversationOrder, createReferralPartner, getDb, listConversationOrders, listReferralPartners, markOrderOwnerNotified, markOrderTelegramOpened, updateConversationOrder, updateReferralPartner } from "./db";
+import { normalizeReferralCode, readReferralCode } from "./referral";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { notifyOwner } from "./_core/notification";
 import { systemRouter } from "./_core/systemRouter";
@@ -23,8 +24,9 @@ export const appRouter = router({
     }),
   }),
   orders: router({
-    startConversation: publicProcedure.input(conversationRequestSchema).mutation(async ({ input }) => {
+    startConversation: publicProcedure.input(conversationRequestSchema).mutation(async ({ input, ctx }) => {
       const reference = `BS-${referenceSuffix()}`;
+      const referralCode = ctx.req ? (readReferralCode(ctx.req) ?? undefined) : undefined;
       const order = await createConversationOrder({
         reference,
         childName: input.childName,
@@ -33,6 +35,7 @@ export const appRouter = router({
         contactMethod: input.contactMethod,
         contactValue: input.contactValue,
         privacyConsent: input.privacyConsent,
+        referralCode,
         status: "conversation_started",
       });
 
@@ -57,8 +60,9 @@ export const appRouter = router({
       reference: z.string().regex(/^BS-[A-Z0-9]{7}$/),
       status: statusSchema,
       adminNotes: z.string().max(2000).nullable(),
+      referralCode: z.string().max(48).nullable().optional(),
     })).mutation(async ({ input }) => {
-      await updateConversationOrder(input.reference, { status: input.status, adminNotes: input.adminNotes });
+      await updateConversationOrder(input.reference, { status: input.status, adminNotes: input.adminNotes, referralCode: input.referralCode ?? null });
       return { success: true };
     }),
     summary: adminProcedure.query(async () => {
@@ -71,7 +75,25 @@ export const appRouter = router({
       };
     }),
   }),
+  partners: router({
+    list: adminProcedure.query(() => listReferralPartners()),
+    create: adminProcedure.input(z.object({
+      name: z.string().trim().min(1).max(120),
+      code: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{2,47}$/i).transform(value => normalizeReferralCode(value)!),
+      commissionType: z.enum(["fixed", "percent"]),
+      commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/),
+    })).mutation(({ input }) => createReferralPartner({ ...input, active: true })),
+    update: adminProcedure.input(z.object({
+      id: z.number().int().positive(),
+      name: z.string().trim().min(1).max(120).optional(),
+      commissionType: z.enum(["fixed", "percent"]).optional(),
+      commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
+      active: z.boolean().optional(),
+    })).mutation(({ input }) => {
+      const { id, ...changes } = input;
+      return updateReferralPartner(id, changes);
+    }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;
-

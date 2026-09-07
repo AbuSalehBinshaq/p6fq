@@ -18,3 +18,18 @@ CREATE TABLE `conversationOrders` (
 );
 --> statement-breakpoint
 ALTER TABLE `users` MODIFY COLUMN `role` enum('admin','user') NOT NULL DEFAULT 'user';
+--> statement-breakpoint
+ALTER TABLE `conversationOrders` ADD `referralCode` varchar(48);
+--> statement-breakpoint
+CREATE TABLE `referralPartners` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`code` varchar(48) NOT NULL,
+	`name` varchar(120) NOT NULL,
+	`commissionType` enum('fixed','percent') NOT NULL DEFAULT 'fixed',
+	`commissionValue` varchar(20) NOT NULL DEFAULT '0',
+	`active` boolean NOT NULL DEFAULT true,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `referralPartners_id` PRIMARY KEY(`id`),
+	CONSTRAINT `referralPartners_code_unique` UNIQUE(`code`)
+);

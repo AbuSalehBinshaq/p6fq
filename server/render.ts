@@ -5,7 +5,7 @@ import { dirname, join } from "node:path";
 import { renderRouter } from "./renderRouter";
 import { initializeRenderDatabase } from "./renderStartup";
 import { requireDashboardAccess } from "./renderAuth";
-import { captureReferralFromRequest } from "./referral";
+import { captureReferralFromRequest, normalizeReferralCode, setReferralCookie } from "./referral";
 import { handleTelegramWebhook, initializeTelegramBot } from "./telegramBot";
 
 const app = express();
@@ -16,6 +16,12 @@ const port = Number(process.env.PORT ?? 10000);
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "1mb" }));
+app.get("/partner/:code", (req, res) => {
+  const code = normalizeReferralCode(req.params.code);
+  if (!code) return res.redirect("/");
+  setReferralCookie(res, code);
+  return res.redirect("/");
+});
 app.use((req, res, next) => {
   if (req.method === "GET" && req.path !== "/health") captureReferralFromRequest(req, res);
   next();
