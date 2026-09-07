@@ -1,0 +1,122 @@
+import { initTRPC, TRPCError } from "@trpc/server";
+import type { Request } from "express";
+import { z } from "zod";
+import { nanoid } from "nanoid";
+import superjson from "superjson";
+import { buildConversationTelegramUrl, conversationRequestSchema, orderStatusValues } from "../shared/orderFlow";
+import { expenseCategories, expenseInputSchema, paymentStatusValues } from "../shared/finance";
+import {
+  createRenderConversationOrder,
+  getRenderSiteSettings,
+  updateRenderSiteSettings,
+  createRenderExpense,
+  deleteRenderExpense,
+  getRenderMonthlySummary,
+  listRenderConversationOrders,
+  listRenderExpenses,
+  markRenderOwnerNotified,
+  markRenderTelegramOpened,
+  updateRenderConversationOrder,
+  updateRenderOrderReferral,
+  listRenderReferralPartners,
+  createRenderReferralPartner,
+  updateRenderReferralPartner,
+} from "./renderDb";
+import { hasDashboardAccess } from "./renderAuth";
+import { notifyRenderOwner } from "./renderNotify";
+import { sendTelegramReply } from "./telegramBot";
+import { readReferralCode } from "./referral";
+import { defaultSiteSettings, type SiteSettings } from "../shared/siteSettings";
+
+const t = initTRPC.context<{ req: Request }>().create({ transformer: superjson });
+const dashboardProcedure = t.procedure.use(({ ctx, next }) => {
+  if (!hasDashboardAccess(ctx.req)) throw new TRPCError({ code: "UNAUTHORIZED" });
+  return next();
+});
+
+const referenceSchema = z.string().regex(/^BS-[A-Z0-9_-]+$/);
+const monthSchema = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
+const orderFinancialsSchema = z.object({
+  orderAmount: z.number().finite().min(0).max(999999999),
+  paymentStatus: z.enum(paymentStatusValues),
+});
+const siteSettingsSchema = z.object({
+  brandName: z.string().max(1000),
+  priceAed: z.string().max(1000),
+  pdfPages: z.string().max(1000),
+  responseHours: z.string().max(1000),
+  telegramHandle: z.string().max(1000),
+  announcement: z.string().max(1000),
+  heroTitle: z.string().max(1000),
+  heroSubtitle: z.string().max(1000),
+  metaDescription: z.string().max(1000),
+  gaMeasurementId: z.string().max(1000),
+  clarityProjectId: z.string().max(1000),
+});
+
+export const renderRouter = t.router({
+  site: t.router({
+    settings: t.procedure.query(() => getRenderSiteSettings()),
+  }),
+  settings: t.router({
+    get: dashboardProcedure.query(() => getRenderSiteSettings()),
+    defaults: dashboardProcedure.query(() => defaultSiteSettings),
+    update: dashboardProcedure.input(siteSettingsSchema).mutation(({ input }) => updateRenderSiteSettings(input as SiteSettings)),
+  }),
+  telegram: t.router({
+    sendReply: dashboardProcedure.input(z.object({ chatId: z.string().regex(/^\d+$/), message: z.string().trim().min(1).max(4000) })).mutation(async ({ input }) => {
+      await sendTelegramReply(input.chatId, input.message);
+      return { success: true } as const;
+    }),
+  }),
+  orders: t.router({
+    startConversation: t.procedure.input(conversationRequestSchema).mutation(async ({ input, ctx }) => {
+      const reference = `BS-${nanoid(7).toUpperCase()}`;
+      const referralCode = readReferralCode(ctx.req);
+
+      try {
+        await createRenderConversationOrder({ ...input, reference, referralCode });
+      } catch (error) {
+        console.error("[Order] Failed to save conversation request:", error);
+        throw new Error("تعذر حفظ طلبك الآن. جربي مرة أخرى بعد قليل.");
+      }
+
+      const notified = await notifyRenderOwner({
+        title: `طلب محادثة جديد — ${reference}`,
+        content: `الطفل: ${input.childName} (${input.childAge} سنوات)\nالاهتمام: ${input.childInterest}\nوسيلة التواصل: ${input.contactMethod} — ${input.contactValue}\nمصدر الإحالة: ${referralCode ?? "مباشر"}`,
+      });
+      if (notified) await markRenderOwnerNotified(reference);
+
+      return { reference, telegramUrl: buildConversationTelegramUrl(input, reference) };
+    }),
+    markTelegramOpened: t.procedure.input(z.object({ reference: referenceSchema })).mutation(async ({ input }) => {
+      await markRenderTelegramOpened(input.reference);
+      return { success: true } as const;
+    }),
+    list: dashboardProcedure.query(() => listRenderConversationOrders()),
+    update: dashboardProcedure.input(z.object({ reference: referenceSchema, status: z.enum(orderStatusValues), adminNotes: z.string().trim().max(1000), referralCode: z.string().max(48).nullable().optional(), ...orderFinancialsSchema.shape })).mutation(async ({ input }) => {
+      await updateRenderConversationOrder(input.reference, input.status, input.adminNotes, input.orderAmount, input.paymentStatus);
+      if (input.referralCode !== undefined) await updateRenderOrderReferral(input.reference, input.referralCode);
+      return { success: true } as const;
+    }),
+  }),
+  partners: t.router({
+    list: dashboardProcedure.query(() => listRenderReferralPartners()),
+    create: dashboardProcedure.input(z.object({ name: z.string().trim().min(1).max(120), code: z.string().trim().regex(/^[a-z0-9][a-z0-9-]{2,47}$/i).transform(value => value.toLowerCase()), commissionType: z.enum(["fixed", "percent"]), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/) })).mutation(({ input }) => createRenderReferralPartner(input)),
+    update: dashboardProcedure.input(z.object({ id: z.number().int().positive(), name: z.string().trim().min(1).max(120).optional(), commissionType: z.enum(["fixed", "percent"]).optional(), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(), active: z.boolean().optional() })).mutation(({ input }) => { const { id, ...changes } = input; return updateRenderReferralPartner(id, changes); }),
+  }),
+  expenses: t.router({
+    list: dashboardProcedure.input(z.object({ month: monthSchema.optional() }).optional()).query(({ input }) => listRenderExpenses(input?.month)),
+    create: dashboardProcedure.input(expenseInputSchema).mutation(async ({ input }) => createRenderExpense(input)),
+    delete: dashboardProcedure.input(z.object({ id: z.number().int().positive() })).mutation(async ({ input }) => {
+      await deleteRenderExpense(input.id);
+      return { success: true } as const;
+    }),
+    categories: dashboardProcedure.query(() => expenseCategories),
+  }),
+  summary: t.router({
+    monthly: dashboardProcedure.input(z.object({ month: monthSchema })).query(({ input }) => getRenderMonthlySummary(input.month)),
+  }),
+});
+
+export type RenderRouter = typeof renderRouter;
