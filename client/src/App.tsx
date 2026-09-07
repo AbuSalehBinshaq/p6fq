@@ -15,6 +15,7 @@ import MonthlySummary from "./pages/MonthlySummary";
 import SettingsDashboard from "./pages/SettingsDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import MarketingDashboard from "./pages/MarketingDashboard";
+import PartnersDashboard from "./pages/PartnersDashboard";
 import { useEffect } from "react";
 
 function Router() {
@@ -22,7 +23,7 @@ function Router() {
   useEffect(() => { trackPageView(location); }, [location]);
   return <Switch>
     <Route path="/" component={Home} /><Route path="/thanks" component={ConversationSuccess} /><Route path="/privacy" component={PrivacyPolicy} />
-    <Route path="/admin/login" component={AdminLogin} /><Route path="/admin" component={MonthlySummary} /><Route path="/admin/summary" component={MonthlySummary} /><Route path="/admin/orders" component={OrdersDashboard} /><Route path="/admin/expenses" component={ExpensesDashboard} /><Route path="/admin/settings" component={SettingsDashboard} /><Route path="/admin/marketing" component={MarketingDashboard} />
+    <Route path="/admin/login" component={AdminLogin} /><Route path="/admin" component={MonthlySummary} /><Route path="/admin/summary" component={MonthlySummary} /><Route path="/admin/orders" component={OrdersDashboard} /><Route path="/admin/expenses" component={ExpensesDashboard} /><Route path="/admin/settings" component={SettingsDashboard} /><Route path="/admin/marketing" component={MarketingDashboard} /><Route path="/admin/partners" component={PartnersDashboard} />
     <Route path="/summary" component={MonthlySummary} /><Route path="/orders" component={OrdersDashboard} /><Route path="/expenses" component={ExpensesDashboard} /><Route path="/settings" component={SettingsDashboard} />
     <Route path="/404" component={NotFound} /><Route component={NotFound} />
   </Switch>;
