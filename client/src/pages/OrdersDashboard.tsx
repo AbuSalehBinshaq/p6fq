@@ -12,7 +12,7 @@ function initialDraft(order: { status: OrderStatus; paymentStatus: PaymentStatus
 }
 
 export default function OrdersDashboard() {
-  const orders = trpc.orders.list.useQuery();
+  const orders = trpc.orders.list.useQuery(undefined, { refetchInterval: 10000, refetchIntervalInBackground: true });
   const utils = trpc.useUtils();
   const update = trpc.orders.update.useMutation({ onSuccess: () => { void utils.orders.list.invalidate(); void utils.summary.monthly.invalidate(); } });
   const [drafts, setDrafts] = useState<Record<string, OrderDraft>>({});
@@ -52,7 +52,7 @@ export default function OrdersDashboard() {
   };
 
   return <AdminLayout title="الطلبات" description="تابعي كل طلب من أول محادثة إلى التسليم، وسجّلي قيمته المالية من نفس المكان.">
-    <div className="admin-toolbar"><label className="admin-search"><Search size={16} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="ابحثي بالاسم أو رقم الطلب…" /></label><button className="admin-ghost-button" onClick={() => void orders.refetch()} disabled={orders.isFetching}><RefreshCw size={15} className={orders.isFetching ? "spin" : ""} /> تحديث</button></div>
+    <div className="admin-toolbar"><label className="admin-search"><Search size={16} /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="ابحثي بالاسم أو رقم الطلب…" /></label><span className="auto-refresh-status"><span className="auto-refresh-dot" /> يتحدث تلقائياً</span></div>
     <section className="admin-stat-card" style={{ marginBottom: "1.5rem", textAlign: "right" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}><Send size={17} /><strong>رد سريع على عميل Telegram</strong></div>
       <div className="order-form-grid">
