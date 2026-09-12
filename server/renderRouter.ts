@@ -20,6 +20,8 @@ import {
   listRenderReferralPartners,
   createRenderReferralPartner,
   updateRenderReferralPartner,
+  createRenderShortLink,
+  listRenderShortLinks,
 } from "./renderDb";
 import { buildAdminSessionCookie, clearAdminSessionCookie, hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
@@ -111,6 +113,10 @@ export const renderRouter = t.router({
     list: dashboardProcedure.query(() => listRenderReferralPartners()),
     create: dashboardProcedure.input(z.object({ name: z.string().trim().min(1).max(120), commissionType: z.enum(["fixed", "percent"]), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/) })).mutation(({ input }) => createRenderReferralPartner({ ...input, code: `p-${nanoid(8).toLowerCase()}` })),
     update: dashboardProcedure.input(z.object({ id: z.number().int().positive(), name: z.string().trim().min(1).max(120).optional(), commissionType: z.enum(["fixed", "percent"]).optional(), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(), active: z.boolean().optional() })).mutation(({ input }) => { const { id, ...changes } = input; return updateRenderReferralPartner(id, changes); }),
+  }),
+  shortLinks: t.router({
+    list: dashboardProcedure.query(() => listRenderShortLinks()),
+    create: dashboardProcedure.input(z.object({ partnerCode: z.string().min(2).max(48), source: z.string().trim().min(1).max(60), campaign: z.string().trim().min(1).max(120), content: z.string().trim().max(120).default("") })).mutation(({ input }) => createRenderShortLink({ ...input, slug: nanoid(7) })),
   }),
   expenses: t.router({
     list: dashboardProcedure.input(z.object({ month: monthSchema.optional() }).optional()).query(({ input }) => listRenderExpenses(input?.month)),

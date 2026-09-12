@@ -7,6 +7,7 @@ import { initializeRenderDatabase } from "./renderStartup";
 import { requireDashboardAccess } from "./renderAuth";
 import { captureReferralFromRequest, normalizeReferralCode, setReferralCookie } from "./referral";
 import { handleTelegramWebhook, initializeTelegramBot } from "./telegramBot";
+import { getRenderShortLink } from "./renderDb";
 
 const app = express();
 const currentDir = dirname(fileURLToPath(import.meta.url));
@@ -16,6 +17,13 @@ const port = Number(process.env.PORT ?? 10000);
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
 app.use(express.json({ limit: "1mb" }));
+app.get("/r/:slug", async (req, res) => {
+  const link = await getRenderShortLink(req.params.slug);
+  if (!link) return res.redirect("/");
+  setReferralCookie(res, link.partnerCode);
+  const params = new URLSearchParams({ utm_source: link.source, utm_medium: link.source === "google" ? "cpc" : "social", utm_campaign: link.campaign, ...(link.content ? { utm_content: link.content } : {}) });
+  return res.redirect(`/?${params.toString()}`);
+});
 app.get("/partner/:code", (req, res) => {
   const code = normalizeReferralCode(req.params.code);
   if (!code) return res.redirect("/");
