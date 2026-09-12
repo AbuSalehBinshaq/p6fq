@@ -20,7 +20,14 @@ app.get("/partner/:code", (req, res) => {
   const code = normalizeReferralCode(req.params.code);
   if (!code) return res.redirect("/");
   setReferralCookie(res, code);
-  return res.redirect("/");
+  const source = typeof req.query.s === "string" ? req.query.s.slice(0, 40) : "";
+  const campaign = typeof req.query.c === "string" ? req.query.c.slice(0, 80) : "";
+  const content = typeof req.query.a === "string" ? req.query.a.slice(0, 80) : "";
+  const params = new URLSearchParams();
+  if (source) { params.set("utm_source", source); params.set("utm_medium", source === "google" ? "cpc" : "social"); }
+  if (campaign) params.set("utm_campaign", campaign);
+  if (content) params.set("utm_content", content);
+  return res.redirect(params.toString() ? `/?${params.toString()}` : "/");
 });
 app.use((req, res, next) => {
   if (req.method === "GET" && req.path !== "/health") captureReferralFromRequest(req, res);

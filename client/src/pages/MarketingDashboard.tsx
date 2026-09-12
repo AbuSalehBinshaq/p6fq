@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { Copy, Link2, Plus, Save, Users } from "lucide-react";
 import { useState } from "react";
 
-const campaignQuery = "utm_source=telegram&utm_medium=group&utm_campaign=telegram_admin";
+const campaignQuery = "s=telegram&c=telegram_admin&a=default";
 export default function MarketingDashboard() {
   const partners = trpc.partners.list.useQuery(undefined, { refetchInterval: 10000 });
   const orders = trpc.orders.list.useQuery(undefined, { refetchInterval: 10000 });
