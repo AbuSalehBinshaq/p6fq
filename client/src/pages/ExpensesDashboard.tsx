@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { expenseCategories, formatCurrency, formatMonthLabel } from "@shared/finance";
 import { CalendarDays, Plus, ReceiptText, Trash2 } from "lucide-react";
 import { FormEvent, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 function localDateValue() {
   const date = new Date();
@@ -15,6 +16,7 @@ function monthValue(date: string) {
 
 export default function ExpensesDashboard() {
   const [selectedMonth, setSelectedMonth] = useState(monthValue(localDateValue()));
+  const [categoryFilter, setCategoryFilter] = useState("all");
   const [form, setForm] = useState<{ description: string; category: (typeof expenseCategories)[number]; amount: string; expenseDate: string; notes: string }>({ description: "", category: expenseCategories[0], amount: "", expenseDate: localDateValue(), notes: "" });
   const expenses = trpc.expenses.list.useQuery({ month: selectedMonth });
   const utils = trpc.useUtils();
@@ -23,15 +25,18 @@ export default function ExpensesDashboard() {
       setForm({ description: "", category: expenseCategories[0], amount: "", expenseDate: localDateValue(), notes: "" });
       void utils.expenses.list.invalidate();
       void utils.summary.monthly.invalidate();
+      toast.success("تم تسجيل المصروف بنجاح.");
     },
   });
   const deleteExpense = trpc.expenses.delete.useMutation({
     onSuccess: () => {
       void utils.expenses.list.invalidate();
       void utils.summary.monthly.invalidate();
+      toast.success("تم حذف المصروف.");
     },
   });
 
+  const visibleExpenses = useMemo(() => (expenses.data ?? []).filter(expense => categoryFilter === "all" || expense.category === categoryFilter), [expenses.data, categoryFilter]);
   const total = useMemo(() => (expenses.data ?? []).reduce((sum, expense) => sum + Number(expense.amount), 0), [expenses.data]);
   const topCategory = useMemo(() => {
     const totals = (expenses.data ?? []).reduce<Record<string, number>>((result, expense) => {
@@ -52,7 +57,7 @@ export default function ExpensesDashboard() {
 
   return (
     <AdminLayout title="المصاريف" description="سجّلي تكاليف التشغيل أولاً بأول، وخلّي كل مبلغ مربوطاً بتاريخه وتصنيفه.">
-      <div className="month-toolbar"><label><CalendarDays size={16} /> عرض شهر <input type="month" value={selectedMonth} onChange={event => setSelectedMonth(event.target.value)} /></label><span>{formatMonthLabel(selectedMonth)}</span></div>
+      <div className="month-toolbar"><label><CalendarDays size={16} /> عرض شهر <input type="month" value={selectedMonth} onChange={event => setSelectedMonth(event.target.value)} /></label><label>تصفية التصنيف<select value={categoryFilter} onChange={event => setCategoryFilter(event.target.value)}><option value="all">كل التصنيفات</option>{expenseCategories.map(category => <option key={category} value={category}>{category}</option>)}</select></label><span>{formatMonthLabel(selectedMonth)}</span></div>
 
       <section className="admin-stat-grid expense-stat-grid" aria-label="ملخص المصاريف">
         <article className="admin-stat-card peach-stat"><span>إجمالي المصاريف</span><strong>{formatCurrency(total)}</strong><small>خلال {formatMonthLabel(selectedMonth)}</small></article>
@@ -74,8 +79,8 @@ export default function ExpensesDashboard() {
       </section>
 
       <section className="expense-list-card">
-        <div className="section-card-heading"><div><span className="admin-kicker">سجل الشهر</span><h2>المصاريف المسجلة</h2></div><span className="record-count">{expenses.data?.length ?? 0} عمليات</span></div>
-        {expenses.isLoading ? <div className="admin-table-empty">جاري تحميل المصاريف…</div> : expenses.error ? <div className="admin-table-empty">تعذر تحميل المصاريف.</div> : expenses.data?.length === 0 ? <div className="admin-table-empty"><ReceiptText size={28} /><p>ما فيه مصاريف مسجلة في هذا الشهر.</p></div> : <div className="expenses-table-wrap"><table className="expenses-table"><thead><tr><th>التاريخ</th><th>الوصف</th><th>التصنيف</th><th>المبلغ</th><th>ملاحظات</th><th><span className="sr-only">الإجراء</span></th></tr></thead><tbody>{expenses.data?.map(expense => <tr key={expense.id}><td>{new Date(`${expense.expenseDate}T00:00:00`).toLocaleDateString("ar-AE")}</td><td><b>{expense.description}</b></td><td><span className="category-pill">{expense.category}</span></td><td className="amount-cell">{formatCurrency(Number(expense.amount))}</td><td className="notes-cell">{expense.notes || "—"}</td><td><button className="icon-danger-button" title="حذف المصروف" onClick={() => remove(expense.id)} disabled={deleteExpense.isPending}><Trash2 size={15} /></button></td></tr>)}</tbody></table></div>}
+        <div className="section-card-heading"><div><span className="admin-kicker">سجل الشهر</span><h2>المصاريف المسجلة</h2></div><span className="record-count">{visibleExpenses.length}{categoryFilter === "all" ? " عمليات" : " نتيجة"}</span></div>
+        {expenses.isLoading ? <div className="admin-table-empty">جاري تحميل المصاريف…</div> : expenses.error ? <div className="admin-table-empty">تعذر تحميل المصاريف.</div> : expenses.data?.length === 0 ? <div className="admin-table-empty"><ReceiptText size={28} /><p>ما فيه مصاريف مسجلة في هذا الشهر.</p></div> : <div className="expenses-table-wrap"><table className="expenses-table"><thead><tr><th>التاريخ</th><th>الوصف</th><th>التصنيف</th><th>المبلغ</th><th>ملاحظات</th><th><span className="sr-only">الإجراء</span></th></tr></thead><tbody>{visibleExpenses.map(expense => <tr key={expense.id}><td>{new Date(`${expense.expenseDate}T00:00:00`).toLocaleDateString("ar-AE")}</td><td><b>{expense.description}</b></td><td><span className="category-pill">{expense.category}</span></td><td className="amount-cell">{formatCurrency(Number(expense.amount))}</td><td className="notes-cell">{expense.notes || "—"}</td><td><button className="icon-danger-button" title="حذف المصروف" onClick={() => remove(expense.id)} disabled={deleteExpense.isPending}><Trash2 size={15} /></button></td></tr>)}</tbody></table></div>}
       </section>
     </AdminLayout>
   );
