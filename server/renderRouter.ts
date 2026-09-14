@@ -111,7 +111,11 @@ export const renderRouter = t.router({
   }),
   partners: t.router({
     list: dashboardProcedure.query(() => listRenderReferralPartners()),
-    create: dashboardProcedure.input(z.object({ name: z.string().trim().min(1).max(120), commissionType: z.enum(["fixed", "percent"]), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/) })).mutation(({ input }) => createRenderReferralPartner({ ...input, code: `p-${nanoid(8).toLowerCase()}` })),
+    create: dashboardProcedure.input(z.object({ name: z.string().trim().min(1).max(120), commissionType: z.enum(["fixed", "percent"]), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/) })).mutation(async ({ input }) => {
+      const partner = await createRenderReferralPartner({ ...input, code: `p-${nanoid(8).toLowerCase()}` });
+      const shortLink = await createRenderShortLink({ slug: nanoid(7), partnerCode: partner.code, source: "telegram", campaign: "telegram_campaign", content: "default" });
+      return { partner, shortLink };
+    }),
     update: dashboardProcedure.input(z.object({ id: z.number().int().positive(), name: z.string().trim().min(1).max(120).optional(), commissionType: z.enum(["fixed", "percent"]).optional(), commissionValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(), active: z.boolean().optional() })).mutation(({ input }) => { const { id, ...changes } = input; return updateRenderReferralPartner(id, changes); }),
   }),
   shortLinks: t.router({
