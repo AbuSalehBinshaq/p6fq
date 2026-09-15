@@ -1,7 +1,7 @@
 services:
   - type: web
     runtime: node
-    name: athar
+    name: batal-story
     region: frankfurt
     plan: free
     buildCommand: pnpm install --frozen-lockfile && pnpm build:render
