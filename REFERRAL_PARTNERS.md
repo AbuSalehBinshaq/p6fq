@@ -5,7 +5,7 @@
 ## صيغة الرابط
 
 ```text
-https://batal-story.onrender.com/?partner=admin_ahmed&utm_source=whatsapp&utm_medium=group&utm_campaign=wa_moms_aug
+https://www.theathar.site/?partner=admin_ahmed&utm_source=whatsapp&utm_medium=group&utm_campaign=wa_moms_aug
 ```
 
 يمكن اختصار الرابط الطويل في Bitly بعد إنشائه. يجب استخدام اختصار مختلف لكل أدمن أو لكل قروب حتى تبقى النقرات وتقارير الحملات منفصلة.

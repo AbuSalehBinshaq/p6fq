@@ -6,8 +6,8 @@ ROOT = Path('/home/ubuntu/p6fq')
 ASSETS = ROOT / 'client/public/assets'
 BACKUP = Path('/home/ubuntu/p6fq-image-backup')
 NAMES = [
-    'batal-story-hero.png',
-    'batal-story-social-preview.jpg',
+    'athar-hero.webp',
+    'athar-social-preview.webp',
     'story1-original.jpeg',
     'story1-page-01.png',
     'story1-page-02.png',
