@@ -10,7 +10,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 
 const ASSETS = {
-  hero: "/assets/batal-story-hero.webp",
+  hero: "/assets/athar-hero.webp",
   saeedOriginal: "/assets/story1-original.webp",
   saeedPage1: "/assets/story1-page-01.webp",
   saeedPage2: "/assets/story1-page-02.webp",
@@ -23,9 +23,9 @@ const ASSETS = {
   ahmadPage1: "/assets/ahmad-page-1.png",
   ahmadPage2: "/assets/ahmad-page-2.png",
   ahmadPage3: "/assets/ahmad-page-3.png",
-  pair1: "/assets/batal-story-pair-1.png",
-  pair2: "/assets/batal-story-pair-2.png",
-  pair3: "/assets/batal-story-pair-3.png",
+  pair1: "/assets/athar-pair-1.png",
+  pair2: "/assets/athar-pair-2.png",
+  pair3: "/assets/athar-pair-3.png",
 };
 
 const evidence = [
@@ -81,7 +81,7 @@ export default function Home() {
   const startConversation = trpc.orders.startConversation.useMutation({
     onSuccess: data => {
       trackEvent("conversation_request_submitted");
-      sessionStorage.setItem("batal-conversation", JSON.stringify(data));
+      sessionStorage.setItem("athar-conversation", JSON.stringify(data));
       const campaignQuery = campaignQueryString();
       setLocation(`/thanks?order=${encodeURIComponent(data.reference)}${campaignQuery ? `&${campaignQuery}` : ""}`);
     },
@@ -115,7 +115,7 @@ export default function Home() {
     <main dir="rtl" className="landing-shell">
       <div className="top-strip">{settings.announcement}</div>
       <nav className="site-nav page-width" aria-label="التنقل الرئيسي">
-        <a href="#top" className="brand"><span className="brand-icon"><Sparkles size={18} /></span><span>بطل قصتي</span></a>
+        <a href="#top" className="brand"><span className="brand-icon"><Sparkles size={18} /></span><span>أثر</span></a>
         <div className="nav-links"><a href="#what-you-get">شو بتستلمين؟</a><a href="#examples">أمثلة حقيقية</a><a href="#how">كيف نبدأ؟</a><a href="#trust">طمأنينة لك</a></div>
         <Button className="nav-button" onClick={scrollToConversation}>ابدئي محادثة <ArrowLeft size={16} /></Button>
       </nav>
@@ -124,7 +124,7 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow"><span>✦</span> حكاية عربية لا تشبه أي حكاية أخرى</div>
           <h1>{settings.heroTitle}<br /><em>{settings.heroSubtitle}</em></h1>
-          <p className="hero-lede">نحوّل اهتمامه الصغير إلى مغامرة عربية دافئة، يكون هو بطلها. نتفاهم معك شخصياً أولاً، ثم نطلب الصورة داخل تيليجرام، ونرسل لك معاينة قبل أي دفع.</p>
+          <p className="hero-lede">نحوّل اهتمامه الصغير إلى مغامرة عربية دافئة، يكون هو حكايته الخاصة. نتفاهم معك شخصياً أولاً، ثم نطلب الصورة داخل تيليجرام، ونرسل لك معاينة قبل أي دفع.</p>
           <div className="human-promise"><div className="promise-number">01</div><p><b>ما تحتاجين تعرفين أي شيء تقني.</b><br />قولي لنا شو يحب طفلك، ونحن نمشي معك خطوة بخطوة.</p></div>
           <div className="hero-actions"><Button className="primary-button" onClick={scrollToConversation}>خلينا نتفاهم عن قصته <MessageCircle size={19} /></Button><a href="#examples" className="quiet-link"><span>↓</span> شوفي النتيجة أولاً</a></div>
           <div className="hero-anchors"><span><Check size={15} /> لا صورة في الموقع</span><span><Check size={15} /> لا دفع الآن</span><span><Check size={15} /> محادثة بشرية واضحة</span></div>
@@ -142,14 +142,14 @@ export default function Home() {
       <section id="what-you-get" className="value-section page-width">
         <div className="section-heading"><div><span className="section-label">شو بيوصل لكم في النهاية؟</span><h2>وقت قصير مع حكاية<br /><em>تبقى في الذاكرة.</em></h2></div><p>مو مجرد اسم على غلاف. نكتب القصة حول اهتمامه، ونصنع شخصية قصصية لطيفة مستوحاة منه.</p></div>
         <div className="value-grid">
-          <article className="value-card peach"><span>للطفل</span><div className="value-icon"><Star size={22} fill="currentColor" /></div><h3>يشوف نفسه بطلاً</h3><p>يقرأ اسمه داخل مغامرة تشبه ما يحبه، ويشعر أن الحكاية كُتبت له وحده.</p></article>
+          <article className="value-card peach"><span>للطفل</span><div className="value-icon"><Star size={22} fill="currentColor" /></div><h3>يشوف نفسه شخصية رئيسية</h3><p>يقرأ اسمه داخل مغامرة تشبه ما يحبه، ويشعر أن الحكاية كُتبت له وحده.</p></article>
           <article className="value-card mint"><span>للأهل</span><div className="value-icon"><Heart size={22} fill="currentColor" /></div><h3>ذكرى جاهزة للحفظ</h3><p>PDF عربي من 8 صفحات تفتحينه وقت النوم وتحفظينه أو ترسلينه لمن يحب.</p></article>
           <article className="value-card gold"><span>قبل الدفع</span><div className="value-icon"><ImagePlus size={22} /></div><h3>معاينة على مهل</h3><p>تشوفين النتيجة أولاً وتتفاهمين معنا مباشرة. ما فيه خطوة تجبرك على الاستمرار.</p></article>
         </div>
       </section>
 
       <section id="examples" className="examples-section page-width">
-        <div className="section-heading"><div><span className="section-label">دليل واضح، مو وعود</span><h2>من طفلك كما هو،<br /><em>إلى بطل في عالمه.</em></h2></div><div className="honesty-badge"><b>أمثلة حقيقية</b><span>من قصص أُنجزت بموافقة ولي الأمر</span></div></div>
+        <div className="section-heading"><div><span className="section-label">دليل واضح، مو وعود</span><h2>من طفلك كما هو،<br /><em>إلى شخصية في عالمه.</em></h2></div><div className="honesty-badge"><b>أمثلة حقيقية</b><span>من قصص أُنجزت بموافقة ولي الأمر</span></div></div>
         <p className="section-copy">هذه أمثلة من أعمالنا: الصورة الأصلية، ثم الصفحات التي يظهر فيها الطفل كشخصية قصصية. اضغطي على أي مثال وشوفي الصفحات بحجم أكبر.</p>
         <div className="evidence-grid">
           {evidence.map(item => <article className="evidence-card" key={item.title}>
@@ -193,7 +193,7 @@ export default function Home() {
       <section className="faq-section page-width"><span className="section-label">أسئلة مطمئنة قبل المحادثة</span><h2>تبين تعرفين أكثر؟</h2><div className="faq-list">{dynamicFaq.map(([question, answer], index) => <div className={`faq-item ${openFaq === index ? "open" : ""}`} key={question}><button onClick={() => setOpenFaq(openFaq === index ? null : index)}><span>{question}</span><ChevronDown size={19} /></button>{openFaq === index && <p>{answer}</p>}</div>)}</div></section>
 
       <section className="closing-section"><div className="page-width closing-inner"><div><span className="section-label">القصة التي يتذكرها ما تبدأ بملف</span><h2>تبدأ من أحد يسمعك،<br /><em>ويسمع طفلك.</em></h2><p>ابدئي برسالة بسيطة. لا صورة ولا دفع الآن.</p></div><Button className="primary-button" onClick={scrollToConversation}>ابدئي التفاهم <ArrowLeft size={18} /></Button></div></section>
-      <footer className="site-footer page-width"><span className="brand"><span className="brand-icon"><Sparkles size={15} /></span> بطل قصتي</span><div className="footer-payment" aria-label="وسائل الدفع المتاحة بعد اعتماد المعاينة"><span>الدفع بعد اعتماد المعاينة</span><div className="payment-badges">{supportedPaymentMethods.map(method => <span className={`payment-badge ${method.id}`} key={method.id} aria-label={method.label.replace("\n", " ")}>{method.id === "mastercard" && <i className="mastercard-circles" aria-hidden="true"><b /><b /></i>}<em>{method.label}</em></span>)}</div></div><nav className="footer-links" aria-label="روابط التذييل"><a href="/privacy">سياسة الخصوصية</a></nav></footer>
+      <footer className="site-footer page-width"><span className="brand"><span className="brand-icon"><Sparkles size={15} /></span> أثر</span><div className="footer-payment" aria-label="وسائل الدفع المتاحة بعد اعتماد المعاينة"><span>الدفع بعد اعتماد المعاينة</span><div className="payment-badges">{supportedPaymentMethods.map(method => <span className={`payment-badge ${method.id}`} key={method.id} aria-label={method.label.replace("\n", " ")}>{method.id === "mastercard" && <i className="mastercard-circles" aria-hidden="true"><b /><b /></i>}<em>{method.label}</em></span>)}</div></div><nav className="footer-links" aria-label="روابط التذييل"><a href="/privacy">سياسة الخصوصية</a></nav></footer>
 
       {gallery && <div className="gallery-backdrop" role="presentation" onClick={() => setGallery(null)}><div className="gallery-modal" role="dialog" aria-modal="true" aria-labelledby="gallery-title" onClick={event => event.stopPropagation()}><button className="gallery-close" aria-label="إغلاق المعاينة" onClick={() => setGallery(null)}><X size={21} /></button><span className="section-label">صفحات من القصة</span><h3 id="gallery-title">{gallery.title}</h3><p>{gallery.story}</p><div className="gallery-pages">{gallery.pages.map((page, index) => <img src={page} key={page} alt={`${gallery.title} — صفحة ${index + 1}`} {...contentImageLoadingProps} />)}</div></div></div>}
     </main>

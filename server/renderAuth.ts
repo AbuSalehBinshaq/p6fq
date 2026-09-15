@@ -28,6 +28,6 @@ export function hasDashboardAccess(request: Pick<Request, "headers">) {
 export function requireDashboardAccess(req: Request, res: Response, next: NextFunction) {
   if (!process.env.ORDERS_DASHBOARD_PASSWORD) return res.status(503).send("لوحة الإدارة لم تُضبط بعد.");
   if (hasDashboardAccess(req)) return next();
-  res.setHeader("WWW-Authenticate", 'Basic realm="Batal Story Orders", charset="UTF-8"');
+  res.setHeader("WWW-Authenticate", 'Basic realm="Athar Orders", charset="UTF-8"');
   return res.status(401).send("يتطلب هذا المسار تسجيل الدخول.");
 }

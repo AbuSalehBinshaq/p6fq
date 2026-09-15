@@ -26,7 +26,7 @@ export default function MonthlySummary() {
   const downloadExcel = () => {
     const workbook = XLSX.utils.book_new();
     const summaryRows = [
-      ["بطل قصتي — ملخص الشهر", formatMonthLabel(selectedMonth)],
+      ["أثر — ملخص الشهر", formatMonthLabel(selectedMonth)],
       [],
       ["المؤشر", "القيمة"],
       ["عدد الطلبات", summary.data?.orderCount ?? 0],
@@ -43,7 +43,7 @@ export default function MonthlySummary() {
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(orderRows), "الطلبات");
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(expenseRows), "المصاريف");
     XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(categoryRows), "تصنيفات المصاريف");
-    XLSX.writeFile(workbook, `batal-story-${selectedMonth}.xlsx`);
+    XLSX.writeFile(workbook, `athar-${selectedMonth}.xlsx`);
   };
 
   return (

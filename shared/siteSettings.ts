@@ -1,5 +1,5 @@
 export const defaultSiteSettings = {
-  brandName: "بطل قصتي",
+  brandName: "أثر",
   priceAed: "23.60",
   pdfPages: "8",
   responseHours: "24",
@@ -7,7 +7,7 @@ export const defaultSiteSettings = {
   announcement: "بداية لطيفة، بلا التزام · تفاهم شخصي قبل الصورة والدفع · رد خلال 24 ساعة كحد أقصى",
   heroTitle: "مو بس قصة باسم طفلك.",
   heroSubtitle: "هذه ذكرى تقول له: أنت مهم.",
-  metaDescription: "قصة عربية مخصصة لطفلك، يصير هو بطلها. تفاهم شخصي، معاينة قبل الدفع، ولا صورة في الموقع.",
+  metaDescription: "قصة عربية مخصصة لطفلك، يصير هو حكايته الخاصة. تفاهم شخصي، معاينة قبل الدفع، ولا صورة في الموقع.",
   gaMeasurementId: "G-SCDX40T1V2",
   clarityProjectId: "y8v55mr0iy",
 } as const;

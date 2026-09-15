@@ -300,7 +300,7 @@ async function handleMessage(message: TelegramMessage) {
     }
     const referralCode = startArgument || null;
     await saveTelegramConversation(conversation.chatId, { stage: "welcome", referralCode, humanMode: false, lastMessageAt: new Date() });
-    await sendMessage(message.chat.id, "أهلًا بك في «بطل قصتي» 🌿\n\nأقدر أشرح لك الخدمة والسعر والأمثلة، أو أبدأ أجمع فكرة قصة طفلك. اختاري من الخيارات، وإذا تبين شخصًا من الفريق اكتبي «أريد موظفًا».", mainKeyboard);
+    await sendMessage(message.chat.id, "أهلًا بك في «أثر» 🌿\n\nأقدر أشرح لك الخدمة والسعر والأمثلة، أو أبدأ أجمع فكرة قصة طفلك. اختاري من الخيارات، وإذا تبين شخصًا من الفريق اكتبي «أريد موظفًا».", mainKeyboard);
     return;
   }
 
