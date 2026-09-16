@@ -45,6 +45,8 @@ app.get("/health", (_req, res) => res.status(200).json({ status: "ok" }));
 app.post("/api/telegram/webhook", handleTelegramWebhook);
 app.use(["/orders", "/expenses", "/summary"], requireDashboardAccess);
 app.use("/api/trpc", createExpressMiddleware({ router: renderRouter, createContext: ({ req, res }) => ({ req, res }) }));
+app.get("/robots.txt", (_req, res) => res.sendFile(join(staticDir, "robots.txt")));
+app.get("/sitemap.xml", (_req, res) => res.type("application/xml").sendFile(join(staticDir, "sitemap.xml")));
 app.use(express.static(staticDir, { maxAge: "1y", immutable: true, index: false }));
 app.get("*", (_req, res) => res.sendFile(join(staticDir, "index.html")));
 
