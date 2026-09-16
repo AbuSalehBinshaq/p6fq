@@ -8,7 +8,7 @@ export const defaultSiteSettings = {
   heroTitle: "مو بس قصة باسم طفلك.",
   heroSubtitle: "هذه ذكرى تقول له: أنت مهم.",
   metaDescription: "قصة عربية مخصصة لطفلك، يصير هو حكايته الخاصة. تفاهم شخصي، معاينة قبل الدفع، ولا صورة في الموقع.",
-  gaMeasurementId: "G-SCDX40T1V2",
+  gaMeasurementId: "G-HCGMY5PTJ3",
   clarityProjectId: "y8v55mr0iy",
 } as const;
 
