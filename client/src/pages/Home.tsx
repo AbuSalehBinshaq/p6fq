@@ -47,9 +47,10 @@ const evidence = [
 
 const faq = [
   ["هل أحتاج أعرف في التقنية أو أرفع شيء هنا؟", "أبداً. ارسلي لنا فكرة طفلك ووسيلة التواصل فقط. بعد أن نتفاهم معك شخصياً داخل تيليجرام، نطلب الصورة بوضوح داخل المحادثة."],
-  ["ماذا أستلم في النهاية؟", "تستلمين ملف PDF عربي مخصص من 8 صفحات: غلاف يحمل شخصية طفلك، وحكاية مناسبة لعمره، وصفحات جاهزة للقراءة معه أو الاحتفاظ بها ومشاركتها مع العائلة."],
-  ["كم السعر ومتى أدفع؟", "سعر الإطلاق الحالي يبدأ من 17 د.إ للملف المخصص من 8 صفحات. إذا احتاجت الفكرة شيئاً إضافياً نوضح السعر لك قبل أي خطوة. الدفع لا يكون إلا بعد أن ترين المعاينة وتقتنعين بها."],
-  ["هل أستطيع طلب تعديل؟", "نتفاهم على التفاصيل قبل العمل، ثم ترين المعاينة قبل الدفع. إذا احتاجت القصة تعديلاً بسيطاً يناسب طفلك، نناقشه معك بوضوح قبل أن نكمل."],
+  ["ماذا أستلم في النهاية؟", "تستلمين {productDescription}"],
+  ["كم السعر ومتى أدفع؟", "سعر الإطلاق التجريبي الحالي هو {priceAed} د.إ. الدفع والتواصل يدويان عبر تيليجرام، ونؤكد التفاصيل معك قبل بدء الإنتاج."],
+  ["كم تستغرق القصة؟", "مدة التنفيذ {deliveryDays} بعد اكتمال البيانات والصورة وتأكيد الدفع."],
+  ["هل أستطيع طلب تعديل؟", "تشمل الخدمة مراجعة بسيطة واحدة ({revisionCount}). نتفق على التفاصيل قبل العمل، ثم نناقش التعديل بوضوح قبل التسليم."],
   ["هل تحفظون صورة طفلي؟", "لا نطلب الصورة في هذه الصفحة. ترسلينها بعد الاتفاق داخل المحادثة فقط لاستخدامها في المعاينة والقصة. لا ننشرها أو نستخدمها للتسويق من دون موافقتك المنفصلة."],
 ];
 
@@ -70,7 +71,13 @@ const initialForm: ConversationRequest = {
 
 export default function Home() {
   const settings = useSiteSettings();
-  const dynamicFaq = faq.map(([question, answer]) => [question, answer.replaceAll("17", settings.priceAed).replaceAll("8 صفحات", `${settings.pdfPages} صفحات`)] as const);
+  const dynamicFaq = faq.map(([question, answer]) => [question, answer
+    .replaceAll("{priceAed}", settings.priceAed)
+    .replaceAll("{pdfPages}", settings.pdfPages)
+    .replaceAll("{deliveryDays}", settings.deliveryDays)
+    .replaceAll("{revisionCount}", settings.revisionCount)
+    .replaceAll("{productDescription}", settings.productDescription)
+    .replaceAll("8 صفحات", `${settings.pdfPages} صفحات`)] as const);
   const conversationRef = useRef<HTMLElement>(null);
   const formViewed = useRef(false);
   const formStarted = useRef(false);
@@ -124,10 +131,10 @@ export default function Home() {
         <div className="hero-copy">
           <div className="eyebrow"><span>✦</span> حكاية عربية لا تشبه أي حكاية أخرى</div>
           <h1>{settings.heroTitle}<br /><em>{settings.heroSubtitle}</em></h1>
-          <p className="hero-lede">نحوّل اهتمامه الصغير إلى مغامرة عربية دافئة، يكون هو حكايته الخاصة. نتفاهم معك شخصياً أولاً، ثم نطلب الصورة داخل تيليجرام، ونرسل لك معاينة قبل أي دفع.</p>
+          <p className="hero-lede">{settings.productDescription} نتفاهم معك شخصياً أولاً، ثم نكمل التفاصيل عبر تيليجرام بهدوء.</p>
           <div className="human-promise"><div className="promise-number">01</div><p><b>ما تحتاجين تعرفين أي شيء تقني.</b><br />قولي لنا شو يحب طفلك، ونحن نمشي معك خطوة بخطوة.</p></div>
-          <div className="hero-actions"><Button className="primary-button" onClick={scrollToConversation}>خلينا نتفاهم عن قصته <MessageCircle size={19} /></Button><a href="#examples" className="quiet-link"><span>↓</span> شوفي النتيجة أولاً</a></div>
-          <div className="hero-anchors"><span><Check size={15} /> لا صورة في الموقع</span><span><Check size={15} /> لا دفع الآن</span><span><Check size={15} /> محادثة بشرية واضحة</span></div>
+          <div className="hero-actions"><Button className="primary-button" onClick={scrollToConversation}>استفسري عن قصة طفلك <MessageCircle size={19} /></Button><a href="#examples" className="quiet-link"><span>↓</span> شوفي النتيجة أولاً</a></div>
+          <div className="hero-anchors"><span><Check size={15} /> قصة من {settings.pdfPages} صفحات</span><span><Check size={15} /> مدة {settings.deliveryDays}</span><span><Check size={15} /> محادثة بشرية واضحة</span></div>
         </div>
         <div className="hero-visual" aria-label="مثال غلاف قصة مخصصة">
           <div className="hero-wash" />
@@ -137,13 +144,13 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="reassurance"><div className="page-width reassurance-inner"><span>ببساطة، شو بيصير؟</span><b>نتفاهم</b><i>←</i><b>ترسلين الصورة في تيليجرام</b><i>←</i><b>تشوفين المعاينة</b><i>←</i><b>تدفعين إذا اقتنعتِ</b></div></section>
+      <section className="reassurance"><div className="page-width reassurance-inner"><span>ببساطة، شو بيصير؟</span><b>استفسار عبر تيليجرام</b><i>←</i><b>تتفقين على التفاصيل</b><i>←</i><b>ترسلين الصورة عند بدء الطلب</b><i>←</i><b>ننتج ونسلّم PDF</b></div></section>
 
       <section id="what-you-get" className="value-section page-width">
         <div className="section-heading"><div><span className="section-label">شو بيوصل لكم في النهاية؟</span><h2>وقت قصير مع حكاية<br /><em>تبقى في الذاكرة.</em></h2></div><p>مو مجرد اسم على غلاف. نكتب القصة حول اهتمامه، ونصنع شخصية قصصية لطيفة مستوحاة منه.</p></div>
         <div className="value-grid">
           <article className="value-card peach"><span>للطفل</span><div className="value-icon"><Star size={22} fill="currentColor" /></div><h3>يشوف نفسه شخصية رئيسية</h3><p>يقرأ اسمه داخل مغامرة تشبه ما يحبه، ويشعر أن الحكاية كُتبت له وحده.</p></article>
-          <article className="value-card mint"><span>للأهل</span><div className="value-icon"><Heart size={22} fill="currentColor" /></div><h3>ذكرى جاهزة للحفظ</h3><p>PDF عربي من 8 صفحات تفتحينه وقت النوم وتحفظينه أو ترسلينه لمن يحب.</p></article>
+          <article className="value-card mint"><span>للأهل</span><div className="value-icon"><Heart size={22} fill="currentColor" /></div><h3>ذكرى جاهزة للحفظ</h3><p>PDF عربي من {settings.pdfPages} صفحات تفتحينه وقت النوم وتحفظينه أو ترسلينه لمن يحب.</p></article>
           <article className="value-card gold"><span>قبل الدفع</span><div className="value-icon"><ImagePlus size={22} /></div><h3>معاينة على مهل</h3><p>تشوفين النتيجة أولاً وتتفاهمين معنا مباشرة. ما فيه خطوة تجبرك على الاستمرار.</p></article>
         </div>
       </section>
@@ -165,12 +172,12 @@ export default function Home() {
         <div className="case-visual"><div className="case-photo"><span>قبل</span><img src={ASSETS.ahmadOriginal} alt="الصورة الأصلية لأحمد" {...contentImageLoadingProps} /></div><div className="case-arrow">←</div><div className="case-pages"><span>بعد</span><img src={ASSETS.ahmadPage1} alt="غلاف قصة أحمد" {...contentImageLoadingProps} /><img src={ASSETS.ahmadPage2} alt="صفحة من قصة أحمد" {...contentImageLoadingProps} /><img src={ASSETS.ahmadPage3} alt="صفحة ختامية من قصة أحمد" {...contentImageLoadingProps} /></div></div>
       </section>
 
-      <section id="how" className="journey-section"><div className="page-width"><div className="journey-heading"><div><span className="section-label">كيف نمشي معك؟</span><h2>أربع خطوات بشرية.<br /><em>ولا وحدة منها معقدة.</em></h2></div><p>نحن نفضل أن نتفاهم معك قبل أن نطلب منّك أي شيء حساس أو ندخلك في دفع.</p></div><div className="journey-grid"><article><b>1</b><h3>قولي لنا شو يحب</h3><p>الاسم والعمر وفكرة أو اهتمام بسيط. هذه كل البداية.</p></article><article><b>2</b><h3>نتفاهم في تيليجرام</h3><p>نسأل ونقترح معك الشخصيات والجو الذي يشبه طفلك.</p></article><article><b>3</b><h3>ترسلين الصورة بعد الاتفاق</h3><p>داخل المحادثة فقط، حتى تكونين مرتاحة وفاهمة لماذا نحتاجها.</p></article><article><b>4</b><h3>تشوفين ثم تقررين</h3><p>نرسل المعاينة، ولا يكون الدفع إلا إذا حبيتي النتيجة.</p></article></div></div></section>
+      <section id="how" className="journey-section"><div className="page-width"><div className="journey-heading"><div><span className="section-label">كيف نمشي معك؟</span><h2>استفسار أو طلب.<br /><em>والخطوات واضحة.</em></h2></div><p>يمكنك البدء بسؤالنا عبر تيليجرام، أو تجهيز طلب القصة عندما تكونين مستعدة.</p></div><div className="journey-grid"><article><b>1</b><h3>استفسري أولاً</h3><p>ابدئي بمحادثة بشرية عن الفكرة والمنتج.</p></article><article><b>2</b><h3>جهزي تفاصيل القصة</h3><p>نحدد العمر والاهتمام والقيمة التعليمية والجو المناسب.</p></article><article><b>3</b><h3>أرسلي الصورة عند البدء</h3><p>نطلب الصورة فقط ضمن خطوة واضحة وموافقة صريحة.</p></article><article><b>4</b><h3>ننتج ونسلّم PDF</h3><p>نصنع القصة يدوياً، مع مراجعة بسيطة واحدة.</p></article></div></div></section>
 
-      <section id="trust" className="trust-section page-width"><div className="trust-mark"><LockKeyhole size={30} /><span>وضوح<br /><b>وطمأنينة</b></span></div><div><span className="section-label">قبل ما تبدين، هذه وعودنا لك</span><h2>مانباك تقتنعين بسرعة.<br /><em>نبغاك تكونين مرتاحة.</em></h2><div className="trust-list"><p><b>السعر واضح من البداية.</b> سعر الإطلاق الحالي يبدأ من 17 د.إ لملف PDF مخصص من 8 صفحات، وأي إضافة نوضحها قبل أن نبدأ.</p><p><b>الرد شخصي خلال 24 ساعة كحد أقصى.</b> المحادثة مو روبوت، ونتفاهم معك بلغتك وبهدوء.</p><p><b>لا صورة ولا دفع من الموقع.</b> تبدأين كلاماً بسيطاً فقط. بعد التفاهم، ترسلين الصورة داخل تيليجرام إذا ارتحتِ.</p><p><b>المعاينة قبل القرار.</b> نشوف معك إن كانت النتيجة مناسبة، ونناقش التعديل البسيط قبل الدفع.</p></div></div></section>
+      <section id="trust" className="trust-section page-width"><div className="trust-mark"><LockKeyhole size={30} /><span>وضوح<br /><b>وطمأنينة</b></span></div><div><span className="section-label">قبل ما تبدين، هذه وعودنا لك</span><h2>تفاصيل واضحة.<br /><em>وقصة مصنوعة بهدوء.</em></h2><div className="trust-list"><p><b>السعر واضح من البداية.</b> سعر الإطلاق التجريبي {settings.priceAed} د.إ لقصة من {settings.pdfPages} صفحات، وأي إضافة نوضحها لك قبل أن نبدأ.</p><p><b>مدة التنفيذ معروفة.</b> نحتاج {settings.deliveryDays} بعد اكتمال البيانات والصورة وتأكيد الدفع.</p><p><b>التواصل والدفع يدوياً.</b> نبدأ عبر تيليجرام، ولا نضيف دفعاً إلكترونياً في هذه المرحلة.</p><p><b>مراجعة بسيطة واحدة.</b> نناقش التعديل ضمن حدود الخدمة قبل التسليم.</p></div></div></section>
 
       <section ref={conversationRef} id="conversation" className="conversation-section page-width">
-        <div className="conversation-intro"><span className="section-label">ابدئي بالأسهل</span><h2>قولي لنا عن طفلك.<br /><em>والباقي علينا.</em></h2><p>لن نطلب صورة أو بطاقة أو دفع هنا. عبّي البيانات البسيطة، ثم سيفتح تيليجرام برسالة مرتبة حتى تبدأين التفاهم معنا مباشرة.</p><div className="response-card"><Clock3 size={20} /><div><b>نرد خلال 24 ساعة كحد أقصى</b><span>ورقم طلبك يبقى معنا حتى ما تضيع تفاصيل البداية.</span></div></div><div className="response-card"><Phone size={20} /><div><b>هذه محادثة مع شخص، مو نظام معقد</b><span>اختاري ما يناسبك، واسألي عن أي تفصيلة قبل إرسال الصورة.</span></div></div></div>
+        <div className="conversation-intro"><span className="section-label">الاستفسار عبر تيليجرام</span><h2>قولي لنا عن طفلك.<br /><em>والباقي علينا.</em></h2><p>هذا المسار مخصص للاستفسار وبدء التفاهم فقط. لا يرفع صورة ولا ينشئ طلب إنتاج جديداً؛ نكمل معك التفاصيل يدوياً عبر تيليجرام.</p><div className="response-card"><Clock3 size={20} /><div><b>نرد خلال 24 ساعة كحد أقصى</b><span>ورقمك المرجعي يبقى معنا حتى ما تضيع تفاصيل البداية.</span></div></div><div className="response-card"><Phone size={20} /><div><b>إنشاء طلب القصة سيأتي في المسار التالي</b><span>عندما يصبح مسار الطلب جاهزاً، ستتمكنين من إدخال البيانات ورفع الصورة بأمان.</span></div></div></div>
         <div className="conversation-card clarity-mask" data-clarity-mask="true">
           <form onSubmit={submit} onFocusCapture={() => {
             if (!formStarted.current) {
