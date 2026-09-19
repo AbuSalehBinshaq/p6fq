@@ -15,14 +15,17 @@ import MonthlySummary from "./pages/MonthlySummary";
 import SettingsDashboard from "./pages/SettingsDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import MarketingDashboard from "./pages/MarketingDashboard";
+import StoryOrder from "./pages/StoryOrder";
+import StoryOrderSuccess from "./pages/StoryOrderSuccess";
+import StoryOrdersDashboard from "./pages/StoryOrdersDashboard";
 import { useEffect } from "react";
 
 function Router() {
   const [location] = useLocation();
   useEffect(() => { trackPageView(location); }, [location]);
   return <Switch>
-    <Route path="/" component={Home} /><Route path="/thanks" component={ConversationSuccess} /><Route path="/privacy" component={PrivacyPolicy} />
-    <Route path="/admin/login" component={AdminLogin} /><Route path="/admin" component={MonthlySummary} /><Route path="/admin/summary" component={MonthlySummary} /><Route path="/admin/orders" component={OrdersDashboard} /><Route path="/admin/expenses" component={ExpensesDashboard} /><Route path="/admin/settings" component={SettingsDashboard} /><Route path="/admin/marketing" component={MarketingDashboard} /><Route path="/admin/partners" component={MarketingDashboard} />
+    <Route path="/" component={Home} /><Route path="/order" component={StoryOrder} /><Route path="/story-thanks" component={StoryOrderSuccess} /><Route path="/thanks" component={ConversationSuccess} /><Route path="/privacy" component={PrivacyPolicy} />
+    <Route path="/admin/login" component={AdminLogin} /><Route path="/admin" component={MonthlySummary} /><Route path="/admin/summary" component={MonthlySummary} /><Route path="/admin/orders" component={OrdersDashboard} /><Route path="/admin/story-orders" component={StoryOrdersDashboard} /><Route path="/admin/expenses" component={ExpensesDashboard} /><Route path="/admin/settings" component={SettingsDashboard} /><Route path="/admin/marketing" component={MarketingDashboard} /><Route path="/admin/partners" component={MarketingDashboard} />
     <Route path="/summary" component={MonthlySummary} /><Route path="/orders" component={OrdersDashboard} /><Route path="/expenses" component={ExpensesDashboard} /><Route path="/settings" component={SettingsDashboard} />
     <Route path="/404" component={NotFound} /><Route component={NotFound} />
   </Switch>;

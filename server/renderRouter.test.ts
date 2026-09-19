@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-const db = vi.hoisted(() => ({ createRenderConversationOrder: vi.fn(), markRenderOwnerNotified: vi.fn(), markRenderTelegramOpened: vi.fn(), getRenderSiteSettings: vi.fn(() => ({ telegramHandle: "AtharAe_bot" })) }));
+const db = vi.hoisted(() => ({ createRenderConversationOrder: vi.fn(), markRenderOwnerNotified: vi.fn(), markRenderTelegramOpened: vi.fn(), getRenderSiteSettings: vi.fn(() => ({ telegramHandle: "AtharAe_bot" })), getRenderStoryOrder: vi.fn(), listRenderStoryOrders: vi.fn(), updateRenderStoryOrderStatus: vi.fn() }));
 const notifier = vi.hoisted(() => ({ notifyRenderOwner: vi.fn() }));
 const referral = vi.hoisted(() => ({ readReferralCode: vi.fn() }));
 
@@ -21,5 +21,11 @@ describe("Render order API", () => {
     expect(result.reference).toMatch(/^BS-/);
     expect(result.telegramUrl).toBe(`https://t.me/AtharAe_bot?start=${result.reference}`);
     expect(db.createRenderConversationOrder).toHaveBeenCalledWith(expect.objectContaining({ reference: expect.stringMatching(/^BS-/), referralCode: "admin_ahmed" }));
+  });
+
+  it("rejects story photo access without dashboard authorization", async () => {
+    const caller = renderRouter.createCaller({ req: { headers: {} } } as never);
+    await expect(caller.storyOrders.photoUrl({ reference: "ST-ABCDEFGHIJ" })).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+    expect(db.getRenderStoryOrder).not.toHaveBeenCalled();
   });
 });

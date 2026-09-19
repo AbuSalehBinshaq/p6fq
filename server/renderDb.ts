@@ -2,11 +2,13 @@ import { Pool } from "pg";
 import type { ConversationRequest, OrderStatus } from "../shared/orderFlow";
 import type { ExpenseInput, PaymentStatus } from "../shared/finance";
 import { defaultSiteSettings, sanitizeSiteSettings, type SiteSettings } from "../shared/siteSettings";
+import type { StoryOrderInput, StoryOrderRecord, StoryOrderStatus, StoryPaymentStatus } from "../shared/storyOrders";
 
 type RenderOrder = ConversationRequest & { reference: string; referralCode: string | null };
 export type RenderOrderRecord = RenderOrder & { status: OrderStatus; adminNotes: string | null; orderAmount: number; paymentStatus: PaymentStatus; partnerName?: string | null; createdAt: Date; ownerNotifiedAt: Date | null; telegramOpenedAt: Date | null };
 export type RenderExpenseRecord = ExpenseInput & { id: number; createdAt: Date; updatedAt: Date };
 export type RenderShortLinkRecord = { id: number; slug: string; partnerCode: string; source: string; campaign: string; content: string; clicks: number; active: boolean; createdAt: Date };
+export type RenderStoryOrderRecord = StoryOrderRecord;
 export type TelegramConversationStage = "welcome" | "collect_name" | "collect_age" | "collect_interest" | "confirm" | "human_mode" | "awaiting_photo";
 export type TelegramConversationRecord = {
   chatId: string;
@@ -46,6 +48,7 @@ export async function migrateRenderDatabase() {
   await getRenderPool().query(`CREATE TABLE IF NOT EXISTS short_links (id BIGSERIAL PRIMARY KEY, slug VARCHAR(20) NOT NULL UNIQUE, partner_code VARCHAR(48) NOT NULL, source VARCHAR(60) NOT NULL DEFAULT '', campaign VARCHAR(120) NOT NULL DEFAULT '', content VARCHAR(120) NOT NULL DEFAULT '', clicks INTEGER NOT NULL DEFAULT 0, active BOOLEAN NOT NULL DEFAULT TRUE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
   await getRenderPool().query(`CREATE TABLE IF NOT EXISTS finance_expenses (id BIGSERIAL PRIMARY KEY, description VARCHAR(160) NOT NULL, category VARCHAR(80) NOT NULL, amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0), expense_date DATE NOT NULL, notes VARCHAR(500) NOT NULL DEFAULT '', created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
   await getRenderPool().query(`CREATE TABLE IF NOT EXISTS site_settings (setting_key VARCHAR(80) PRIMARY KEY, setting_value TEXT NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
+  await getRenderPool().query(`CREATE TABLE IF NOT EXISTS story_orders (id BIGSERIAL PRIMARY KEY, reference VARCHAR(24) NOT NULL UNIQUE, status VARCHAR(32) NOT NULL DEFAULT 'new', payment_status VARCHAR(20) NOT NULL DEFAULT 'unpaid', child_name VARCHAR(80) NOT NULL, child_age INTEGER NOT NULL CHECK (child_age BETWEEN 2 AND 14), story_idea VARCHAR(1200) NOT NULL, educational_value VARCHAR(600) NOT NULL, additional_notes VARCHAR(1600) NOT NULL DEFAULT '', photo_storage_key VARCHAR(500), photo_content_type VARCHAR(80), photo_size_bytes INTEGER, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(), updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
   await getRenderPool().query(`CREATE TABLE IF NOT EXISTS marketers (id BIGSERIAL PRIMARY KEY, name VARCHAR(120) NOT NULL, code VARCHAR(48) NOT NULL UNIQUE, commission_percent NUMERIC(5, 2) NOT NULL DEFAULT 10 CHECK (commission_percent >= 0 AND commission_percent <= 100), active BOOLEAN NOT NULL DEFAULT TRUE, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());`);
   await getRenderPool().query(`INSERT INTO referral_partners (code, name, commission_type, commission_value, active) SELECT m.code, m.name, 'percent', m.commission_percent, m.active FROM marketers m ON CONFLICT (code) DO NOTHING`);
   await getRenderPool().query(`DROP TABLE IF EXISTS marketers`);
@@ -123,6 +126,17 @@ export async function listRenderConversationOrders() {
   return result.rows;
 }
 export async function updateRenderConversationOrder(reference: string, status: OrderStatus, adminNotes: string, orderAmount: number, paymentStatus: PaymentStatus) { await getRenderPool().query("UPDATE conversation_orders SET status = $2, admin_notes = $3, order_amount = $4, payment_status = $5, updated_at = NOW() WHERE reference = $1", [reference, status, adminNotes.trim() || null, orderAmount, paymentStatus]); }
+export async function createRenderStoryOrder(input: StoryOrderInput & { reference: string }) {
+  await getRenderPool().query(`INSERT INTO story_orders (reference, status, payment_status, child_name, child_age, story_idea, educational_value, additional_notes) VALUES ($1, 'new', 'unpaid', $2, $3, $4, $5, $6)`, [input.reference, input.childName, input.childAge, input.storyIdea, input.educationalValue, input.additionalNotes.trim()]);
+}
+export async function attachRenderStoryPhoto(reference: string, photoStorageKey: string, photoContentType: string, photoSizeBytes: number) {
+  await getRenderPool().query(`UPDATE story_orders SET photo_storage_key = $2, photo_content_type = $3, photo_size_bytes = $4, updated_at = NOW() WHERE reference = $1`, [reference, photoStorageKey, photoContentType, photoSizeBytes]);
+}
+export async function deleteRenderStoryOrder(reference: string) { await getRenderPool().query("DELETE FROM story_orders WHERE reference = $1", [reference]); }
+const storyOrderSelect = `reference, status, payment_status AS "paymentStatus", child_name AS "childName", child_age AS "childAge", story_idea AS "storyIdea", educational_value AS "educationalValue", additional_notes AS "additionalNotes", photo_storage_key AS "photoStorageKey", photo_content_type AS "photoContentType", photo_size_bytes AS "photoSizeBytes", created_at AS "createdAt", updated_at AS "updatedAt"`;
+export async function listRenderStoryOrders() { const result = await getRenderPool().query<RenderStoryOrderRecord>(`SELECT ${storyOrderSelect} FROM story_orders WHERE photo_storage_key IS NOT NULL ORDER BY created_at DESC`); return result.rows; }
+export async function getRenderStoryOrder(reference: string) { const result = await getRenderPool().query<RenderStoryOrderRecord>(`SELECT ${storyOrderSelect} FROM story_orders WHERE reference = $1`, [reference]); return result.rows[0] ?? null; }
+export async function updateRenderStoryOrderStatus(reference: string, status: StoryOrderStatus, paymentStatus: StoryPaymentStatus) { await getRenderPool().query("UPDATE story_orders SET status = $2, payment_status = $3, updated_at = NOW() WHERE reference = $1", [reference, status, paymentStatus]); }
 export async function listRenderReferralPartners() { const result = await getRenderPool().query(`SELECT id, code, name, commission_type AS "commissionType", commission_value::text AS "commissionValue", active, created_at AS "createdAt", updated_at AS "updatedAt" FROM referral_partners ORDER BY created_at DESC`); return result.rows; }
 export async function createRenderReferralPartner(input: { code: string; name: string; commissionType: "fixed" | "percent"; commissionValue: string }) { const result = await getRenderPool().query(`INSERT INTO referral_partners (code, name, commission_type, commission_value) VALUES ($1, $2, $3, $4) RETURNING id, code, name, commission_type AS "commissionType", commission_value::text AS "commissionValue", active`, [input.code, input.name, input.commissionType, input.commissionValue]); return result.rows[0]; }
 export async function updateRenderReferralPartner(id: number, input: { name?: string; commissionType?: "fixed" | "percent"; commissionValue?: string; active?: boolean }) { const fields: string[] = []; const values: unknown[] = []; for (const [key, value] of Object.entries(input)) { const column = { name: "name", commissionType: "commission_type", commissionValue: "commission_value", active: "active" }[key as keyof typeof input]; if (column && value !== undefined) { values.push(value); fields.push(`${column} = $${values.length}`); } } if (!fields.length) return; values.push(id); await getRenderPool().query(`UPDATE referral_partners SET ${fields.join(", ")}, updated_at = NOW() WHERE id = $${values.length}`, values); }

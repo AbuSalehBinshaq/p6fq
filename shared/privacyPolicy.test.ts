@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { analyticsPrivacyDisclosure, dataWeDoNotCollectOnSite, privacyPolicyMeta } from "./privacyPolicy";
+import { analyticsPrivacyDisclosure, dataWeCollect, dataWeDoNotCollectOnSite, privacyPolicyMeta } from "./privacyPolicy";
 
 describe("privacy policy commitments", () => {
-  it("states clearly that child photos and payment information are not collected on the site", () => {
-    expect(dataWeDoNotCollectOnSite.join(" ")).toContain("صورة الطفل");
+  it("distinguishes the protected story photo from payment information", () => {
+    expect(dataWeCollect.join(" ")).toContain("صورة واحدة");
     expect(dataWeDoNotCollectOnSite.join(" ")).toContain("بطاقة بنكية");
   });
 

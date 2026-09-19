@@ -22,12 +22,17 @@ import {
   updateRenderReferralPartner,
   createRenderShortLink,
   listRenderShortLinks,
+  listRenderStoryOrders,
+  getRenderStoryOrder,
+  updateRenderStoryOrderStatus,
 } from "./renderDb";
 import { buildAdminSessionCookie, clearAdminSessionCookie, hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
 import { sendTelegramReply } from "./telegramBot";
 import { readReferralCode } from "./referral";
 import { defaultSiteSettings, type SiteSettings } from "../shared/siteSettings";
+import { storyOrderReferenceSchema, storyOrderStatusValues, storyPaymentStatusLabels, type StoryPaymentStatus } from "../shared/storyOrders";
+import { storageGetSignedUrl } from "./storage";
 
 const t = initTRPC.context<{ req: Request; res?: import("express").Response }>().create({ transformer: superjson });
 const dashboardProcedure = t.procedure.use(({ ctx, next }) => {
@@ -76,6 +81,16 @@ export const renderRouter = t.router({
     get: dashboardProcedure.query(() => getRenderSiteSettings()),
     defaults: dashboardProcedure.query(() => defaultSiteSettings),
     update: dashboardProcedure.input(siteSettingsSchema).mutation(({ input }) => updateRenderSiteSettings(input as SiteSettings)),
+  }),
+  storyOrders: t.router({
+    list: dashboardProcedure.query(() => listRenderStoryOrders()),
+    get: dashboardProcedure.input(z.object({ reference: storyOrderReferenceSchema })).query(({ input }) => getRenderStoryOrder(input.reference)),
+    updateStatus: dashboardProcedure.input(z.object({ reference: storyOrderReferenceSchema, status: z.enum(storyOrderStatusValues), paymentStatus: z.enum(Object.keys(storyPaymentStatusLabels) as [StoryPaymentStatus, StoryPaymentStatus]) })).mutation(({ input }) => updateRenderStoryOrderStatus(input.reference, input.status, input.paymentStatus)),
+    photoUrl: dashboardProcedure.input(z.object({ reference: storyOrderReferenceSchema })).query(async ({ input }) => {
+      const order = await getRenderStoryOrder(input.reference);
+      if (!order?.photoStorageKey) throw new TRPCError({ code: "NOT_FOUND" });
+      return { url: await storageGetSignedUrl(order.photoStorageKey) };
+    }),
   }),
   telegram: t.router({
     sendReply: dashboardProcedure.input(z.object({ chatId: z.string().regex(/^\d+$/), message: z.string().trim().min(1).max(4000) })).mutation(async ({ input }) => {
