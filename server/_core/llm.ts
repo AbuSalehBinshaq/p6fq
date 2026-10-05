@@ -212,14 +212,23 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-const resolveApiUrl = () =>
-  ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
-    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
-    : "https://forge.manus.im/v1/chat/completions";
+export const resolveLLMApiUrl = (path: "chat/completions" | "models") => {
+  if (!ENV.llmApiBase.trim()) throw new Error("LLM_API_BASE is not configured");
+  return `${ENV.llmApiBase.replace(/\/+$/, "")}/${path}`;
+};
 
-const assertApiKey = () => {
-  if (!ENV.forgeApiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
+export const resolveLLMModel = (requestedModel?: string) => {
+  const model = requestedModel?.trim() || ENV.llmModel.trim();
+  if (!model) throw new Error("LLM_MODEL is not configured");
+  return model;
+};
+
+const assertLLMConfig = () => {
+  if (!ENV.llmApiKey.trim()) {
+    throw new Error("LLM_API_KEY is not configured; set the LLM provider environment variables for the admin story production tools.");
+  }
+  if (!ENV.llmApiBase.trim()) {
+    throw new Error("LLM_API_BASE is not configured; set the LLM provider environment variables for the admin story production tools.");
   }
 };
 
@@ -233,22 +242,12 @@ const normalizeResponseFormat = ({
   response_format?: ResponseFormat;
   outputSchema?: OutputSchema;
   output_schema?: OutputSchema;
-}):
-  | { type: "json_schema"; json_schema: JsonSchema }
-  | { type: "text" }
-  | { type: "json_object" }
-  | undefined => {
+}): { type: "json_object" } | { type: "text" } | undefined => {
   const explicitFormat = responseFormat || response_format;
   if (explicitFormat) {
-    if (
-      explicitFormat.type === "json_schema" &&
-      !explicitFormat.json_schema?.schema
-    ) {
-      throw new Error(
-        "responseFormat json_schema requires a defined schema object"
-      );
-    }
-    return explicitFormat;
+    return explicitFormat.type === "json_schema"
+      ? { type: "json_object" }
+      : explicitFormat;
   }
 
   const schema = outputSchema || output_schema;
@@ -258,14 +257,9 @@ const normalizeResponseFormat = ({
     throw new Error("outputSchema requires both name and schema");
   }
 
-  return {
-    type: "json_schema",
-    json_schema: {
-      name: schema.name,
-      schema: schema.schema,
-      ...(typeof schema.strict === "boolean" ? { strict: schema.strict } : {}),
-    },
-  };
+  // DeepSeek Chat Completions supports JSON mode, not OpenAI's json_schema.
+  // The caller must validate the parsed JSON locally.
+  return { type: "json_object" };
 };
 
 const RETRY_MAX_RETRIES = 4;
@@ -340,7 +334,7 @@ const fetchWithBackoff = async (
 };
 
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
-  assertApiKey();
+  assertLLMConfig();
 
   const {
     messages,
@@ -362,9 +356,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     messages: messages.map(normalizeMessage),
   };
 
-  if (model) {
-    payload.model = model;
-  }
+  payload.model = resolveLLMModel(model);
 
   if (tools && tools.length > 0) {
     payload.tools = tools;
@@ -401,11 +393,11 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.response_format = normalizedResponseFormat;
   }
 
-  const response = await fetchWithBackoff(resolveApiUrl(), {
+  const response = await fetchWithBackoff(resolveLLMApiUrl("chat/completions"), {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      authorization: `Bearer ${ENV.forgeApiKey}`,
+      authorization: `Bearer ${ENV.llmApiKey}`,
     },
     body: JSON.stringify(payload),
   });
@@ -433,14 +425,10 @@ export type ModelsResponse = {
 };
 
 export async function listLLMModels(): Promise<ModelsResponse> {
-  assertApiKey();
+  assertLLMConfig();
 
-  const url = ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
-    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/models`
-    : "https://forge.manus.im/v1/models";
-
-  const response = await fetchWithBackoff(url, {
-    headers: { authorization: `Bearer ${ENV.forgeApiKey}` },
+  const response = await fetchWithBackoff(resolveLLMApiUrl("models"), {
+    headers: { authorization: `Bearer ${ENV.llmApiKey}` },
   });
 
   if (!response.ok) {

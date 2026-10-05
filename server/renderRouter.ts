@@ -25,6 +25,8 @@ import {
   listRenderStoryOrders,
   getRenderStoryOrder,
   updateRenderStoryOrderStatus,
+  getRenderStoryProduction,
+  upsertRenderStoryProduction,
 } from "./renderDb";
 import { buildAdminSessionCookie, clearAdminSessionCookie, hasDashboardAccess } from "./renderAuth";
 import { notifyRenderOwner } from "./renderNotify";
@@ -32,6 +34,7 @@ import { sendTelegramReply } from "./telegramBot";
 import { readReferralCode } from "./referral";
 import { defaultSiteSettings, type SiteSettings } from "../shared/siteSettings";
 import { storyOrderReferenceSchema, storyOrderStatusValues, storyPaymentStatusLabels, type StoryPaymentStatus } from "../shared/storyOrders";
+import { storyProductionDraftSchema } from "../shared/storyProduction";
 import { storageGetSignedUrl } from "./storage";
 
 const t = initTRPC.context<{ req: Request; res?: import("express").Response }>().create({ transformer: superjson });
@@ -91,6 +94,8 @@ export const renderRouter = t.router({
       if (!order?.photoStorageKey) throw new TRPCError({ code: "NOT_FOUND" });
       return { url: await storageGetSignedUrl(order.photoStorageKey) };
     }),
+    production: dashboardProcedure.input(z.object({ reference: storyOrderReferenceSchema })).query(({ input }) => getRenderStoryProduction(input.reference)),
+    saveProduction: dashboardProcedure.input(storyProductionDraftSchema).mutation(({ input }) => upsertRenderStoryProduction(input)),
   }),
   telegram: t.router({
     sendReply: dashboardProcedure.input(z.object({ chatId: z.string().regex(/^\d+$/), message: z.string().trim().min(1).max(4000) })).mutation(async ({ input }) => {
