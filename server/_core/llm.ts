@@ -62,6 +62,7 @@ export type InvokeParams = {
   tool_choice?: ToolChoice;
   maxTokens?: number;
   max_tokens?: number;
+  timeoutMs?: number;
   outputSchema?: OutputSchema;
   output_schema?: OutputSchema;
   responseFormat?: ResponseFormat;
@@ -265,6 +266,7 @@ const normalizeResponseFormat = ({
 const RETRY_MAX_RETRIES = 4;
 const RETRY_BASE_DELAY_MS = 500;
 const RETRY_MAX_DELAY_MS = 30_000;
+const DEFAULT_TIMEOUT_MS = 90_000;
 
 type FetchInit = NonNullable<Parameters<typeof fetch>[1]>;
 
@@ -295,13 +297,17 @@ const computeBackoffDelay = (
 // returns the final Response so callers keep their existing error handling.
 const fetchWithBackoff = async (
   url: string,
-  init: FetchInit
+  init: FetchInit,
+  timeoutMs = DEFAULT_TIMEOUT_MS
 ): Promise<Response> => {
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= RETRY_MAX_RETRIES; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      const response = await fetch(url, init);
+      const response = await fetch(url, { ...init, signal: controller.signal });
+      clearTimeout(timeout);
       if (response.ok || attempt === RETRY_MAX_RETRIES) {
         return response;
       }
@@ -319,6 +325,10 @@ const fetchWithBackoff = async (
       );
       await sleep(computeBackoffDelay(attempt, retryAfterMs));
     } catch (error) {
+      clearTimeout(timeout);
+      if (controller.signal.aborted) {
+        throw new Error(`LLM request timed out after ${timeoutMs}ms.`);
+      }
       lastError = error;
       if (attempt === RETRY_MAX_RETRIES) throw error;
       console.warn(
@@ -350,6 +360,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     reasoning,
     maxTokens,
     max_tokens,
+    timeoutMs,
   } = params;
 
   const payload: Record<string, unknown> = {
@@ -400,13 +411,11 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
       authorization: `Bearer ${ENV.llmApiKey}`,
     },
     body: JSON.stringify(payload),
-  });
+  }, timeoutMs);
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `LLM invoke failed: ${response.status} ${response.statusText} – ${errorText}`
-    );
+    await response.body?.cancel();
+    throw new Error(`LLM invoke failed: ${response.status} ${response.statusText}.`);
   }
 
   return (await response.json()) as InvokeResult;
@@ -432,10 +441,8 @@ export async function listLLMModels(): Promise<ModelsResponse> {
   });
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `List LLM models failed: ${response.status} ${response.statusText} – ${errorText}`
-    );
+    await response.body?.cancel();
+    throw new Error(`List LLM models failed: ${response.status} ${response.statusText}.`);
   }
 
   return (await response.json()) as ModelsResponse;

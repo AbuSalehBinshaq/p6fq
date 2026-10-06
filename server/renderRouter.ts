@@ -36,6 +36,7 @@ import { defaultSiteSettings, type SiteSettings } from "../shared/siteSettings";
 import { storyOrderReferenceSchema, storyOrderStatusValues, storyPaymentStatusLabels, type StoryPaymentStatus } from "../shared/storyOrders";
 import { storyProductionDraftSchema } from "../shared/storyProduction";
 import { storageGetSignedUrl } from "./storage";
+import { generateStoryProduction } from "./storyProductionGenerator";
 
 const t = initTRPC.context<{ req: Request; res?: import("express").Response }>().create({ transformer: superjson });
 const dashboardProcedure = t.procedure.use(({ ctx, next }) => {
@@ -96,6 +97,21 @@ export const renderRouter = t.router({
     }),
     production: dashboardProcedure.input(z.object({ reference: storyOrderReferenceSchema })).query(({ input }) => getRenderStoryProduction(input.reference)),
     saveProduction: dashboardProcedure.input(storyProductionDraftSchema).mutation(({ input }) => upsertRenderStoryProduction(input)),
+  }),
+  storyProductions: t.router({
+    generate: dashboardProcedure.input(z.object({ reference: storyOrderReferenceSchema, confirmed: z.literal(true) })).mutation(async ({ input }) => {
+      const order = await getRenderStoryOrder(input.reference);
+      if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "لم يتم العثور على طلب القصة." });
+      const draft = await generateStoryProduction({
+        reference: order.reference,
+        childName: order.childName,
+        childAge: order.childAge,
+        storyIdea: order.storyIdea,
+        educationalValue: order.educationalValue,
+        additionalNotes: order.additionalNotes,
+      });
+      return upsertRenderStoryProduction(draft);
+    }),
   }),
   telegram: t.router({
     sendReply: dashboardProcedure.input(z.object({ chatId: z.string().regex(/^\d+$/), message: z.string().trim().min(1).max(4000) })).mutation(async ({ input }) => {
