@@ -66,6 +66,7 @@ function firstDefined(record: Record<string, unknown>, ...keys: string[]): unkno
 function normalizeGeneratedJson(value: unknown, input: StoryGenerationInput): unknown {
   if (!value || typeof value !== "object" || Array.isArray(value)) return value;
   const source = value as Record<string, unknown>;
+  const storyText = firstDefined(source, "story_text", "storyText");
   const normalizePages = (pages: unknown, textKey: "scene" | "prompt") => {
     if (!Array.isArray(pages)) return pages;
     return pages.map((item, index) => {
@@ -90,7 +91,7 @@ function normalizeGeneratedJson(value: unknown, input: StoryGenerationInput): un
     },
     story_title: firstDefined(source, "story_title", "storyTitle", "title"),
     character_description: firstDefined(source, "character_description", "characterDescription"),
-    story_text: firstDefined(source, "story_text", "storyText"),
+    story_text: Array.isArray(storyText) && storyText.every(part => typeof part === "string") ? storyText.join("\n\n") : storyText,
     page_scenes: normalizePages(firstDefined(source, "page_scenes", "pageScenes"), "scene"),
     leonardo_prompts: normalizePages(firstDefined(source, "leonardo_prompts", "leonardoPrompts"), "prompt"),
   };

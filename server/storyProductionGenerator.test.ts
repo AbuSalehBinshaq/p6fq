@@ -52,6 +52,13 @@ describe("story production generation", () => {
     expect(result.draft.pageScenes).toHaveLength(8);
   });
 
+  it("joins an array of story paragraphs into the story text", () => {
+    const source = JSON.parse(validJson());
+    source.story_text = Array.from({ length: 8 }, (_, index) => `فقرة القصة رقم ${index + 1}.`);
+    const draft = parseGeneratedStoryResponse(input, response(JSON.stringify(source)));
+    expect(draft.storyText).toBe(source.story_text.join("\n\n"));
+  });
+
   it("accepts common camelCase fields and derives the brief from the submitted order", () => {
     const source = JSON.parse(validJson());
     const camelCase = {
