@@ -32,7 +32,7 @@ export type StoryOrderInput = z.infer<typeof storyOrderInputSchema>;
 export const STORY_PHOTO_MAX_BYTES = 8 * 1024 * 1024;
 export const STORY_PHOTO_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 export const STORY_PHOTO_EXTENSIONS = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp" } as const;
-export const storyOrderReferenceSchema = z.string().regex(/^ST-[A-Z0-9]{10}$/);
+export const storyOrderReferenceSchema = z.string().regex(/^ST-[A-Z0-9_-]{10}$/);
 
 export function storyPhotoExtension(contentType: string) {
   return STORY_PHOTO_EXTENSIONS[contentType as keyof typeof STORY_PHOTO_EXTENSIONS] ?? null;

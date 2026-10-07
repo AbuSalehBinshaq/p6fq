@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { storyOrderReferenceSchema } from "./storyOrders";
 
 export const storyProductionStatusLabels = {
   draft: "مسودة الإنتاج",
@@ -44,7 +45,7 @@ export const storyValidationResultSchema = z.object({
 export type StoryValidationResult = z.infer<typeof storyValidationResultSchema>;
 
 export const storyProductionDraftSchema = z.object({
-  reference: z.string().regex(/^ST-[A-Z0-9]{10}$/),
+  reference: storyOrderReferenceSchema,
   storyBrief: storyBriefSchema,
   storyTitle: z.string().trim().max(240).default(""),
   characterDescription: z.string().trim().max(2000).default(""),

@@ -9,13 +9,14 @@ import { captureReferralFromRequest, normalizeReferralCode, setReferralCookie } 
 import { handleTelegramWebhook, initializeTelegramBot } from "./telegramBot";
 import { attachRenderStoryPhoto, createRenderStoryOrder, deleteRenderStoryOrder, getRenderShortLink } from "./renderDb";
 import { storagePut } from "./storage";
-import { nanoid } from "nanoid";
+import { customAlphabet, nanoid } from "nanoid";
 import { storyOrderInputSchema, STORY_PHOTO_MAX_BYTES, STORY_PHOTO_TYPES, isSupportedStoryPhoto, storyPhotoExtension } from "../shared/storyOrders";
 
 const app = express();
 const currentDir = dirname(fileURLToPath(import.meta.url));
 const staticDir = join(currentDir, "public");
 const port = Number(process.env.PORT ?? 10000);
+const storyOrderId = customAlphabet("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ", 10);
 
 app.disable("x-powered-by");
 app.set("trust proxy", 1);
@@ -57,7 +58,7 @@ app.post("/api/story-orders", async (req, res) => {
     for await (const chunk of req) { body = Buffer.concat([body, Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)]); if (body.length > STORY_PHOTO_MAX_BYTES) throw new Error("too_large"); }
     if (body.length !== contentLength || !isSupportedStoryPhoto(contentType, body)) return res.status(400).json({ message: "تعذر التحقق من بنية الصورة." });
     const input = storyOrderInputSchema.parse({ childName: decode("x-story-child-name"), childAge: Number(req.headers["x-story-child-age"]), storyIdea: decode("x-story-idea"), educationalValue: decode("x-story-educational-value"), additionalNotes: decode("x-story-additional-notes"), privacyConsent: req.headers["x-story-privacy-consent"] === "true" });
-    const reference = `ST-${nanoid(10).toUpperCase()}`;
+    const reference = `ST-${storyOrderId()}`;
     await createRenderStoryOrder({ ...input, reference });
     const extension = storyPhotoExtension(contentType)!;
     try {

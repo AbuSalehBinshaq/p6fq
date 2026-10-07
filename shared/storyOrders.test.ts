@@ -1,11 +1,16 @@
 import { describe, expect, it } from "vitest";
-import { isSupportedStoryPhoto, STORY_PHOTO_MAX_BYTES, storyOrderInputSchema } from "./storyOrders";
+import { isSupportedStoryPhoto, STORY_PHOTO_MAX_BYTES, storyOrderInputSchema, storyOrderReferenceSchema } from "./storyOrders";
 
 const validInput = { childName: "ريان", childAge: 7, storyIdea: "يحب الفضاء", educationalValue: "الشجاعة", additionalNotes: "", privacyConsent: true };
 
 describe("Story order validation", () => {
   it("accepts valid order data", () => {
     expect(storyOrderInputSchema.parse(validInput)).toMatchObject(validInput);
+  });
+
+  it("accepts legacy references containing nanoid separators", () => {
+    expect(storyOrderReferenceSchema.parse("ST-2LJPMU9DJ-")).toBe("ST-2LJPMU9DJ-");
+    expect(storyOrderReferenceSchema.parse("ST-ABC_DEF123")).toBe("ST-ABC_DEF123");
   });
 
   it("rejects missing consent and oversized text", () => {
