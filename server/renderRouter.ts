@@ -36,7 +36,7 @@ import { defaultSiteSettings, type SiteSettings } from "../shared/siteSettings";
 import { storyOrderReferenceSchema, storyOrderStatusValues, storyPaymentStatusLabels, type StoryPaymentStatus } from "../shared/storyOrders";
 import { storyProductionDraftSchema } from "../shared/storyProduction";
 import { storageGetSignedUrl } from "./storage";
-import { generateStoryProduction } from "./storyProductionGenerator";
+import { generateStoryProductionWithOutput, StoryOutputValidationError } from "./storyProductionGenerator";
 
 const t = initTRPC.context<{ req: Request; res?: import("express").Response }>().create({ transformer: superjson });
 const dashboardProcedure = t.procedure.use(({ ctx, next }) => {
@@ -102,15 +102,21 @@ export const renderRouter = t.router({
     generate: dashboardProcedure.input(z.object({ reference: storyOrderReferenceSchema, confirmed: z.literal(true) })).mutation(async ({ input }) => {
       const order = await getRenderStoryOrder(input.reference);
       if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "لم يتم العثور على طلب القصة." });
-      const draft = await generateStoryProduction({
-        reference: order.reference,
-        childName: order.childName,
-        childAge: order.childAge,
-        storyIdea: order.storyIdea,
-        educationalValue: order.educationalValue,
-        additionalNotes: order.additionalNotes,
-      });
-      return upsertRenderStoryProduction(draft);
+      try {
+        const { draft, rawOutput } = await generateStoryProductionWithOutput({
+          reference: order.reference,
+          childName: order.childName,
+          childAge: order.childAge,
+          storyIdea: order.storyIdea,
+          educationalValue: order.educationalValue,
+          additionalNotes: order.additionalNotes,
+        });
+        const production = await upsertRenderStoryProduction(draft);
+        return { success: true as const, rawOutput, production };
+      } catch (error) {
+        if (error instanceof StoryOutputValidationError) return { success: false as const, rawOutput: error.rawOutput, error: error.message };
+        throw error;
+      }
     }),
   }),
   telegram: t.router({

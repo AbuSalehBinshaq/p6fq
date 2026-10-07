@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { InvokeResult } from "./_core/llm";
-import { buildStoryGenerationMessages, generateStoryProduction, parseGeneratedStoryResponse } from "./storyProductionGenerator";
+import { buildStoryGenerationMessages, generateStoryProduction, generateStoryProductionWithOutput, parseGeneratedStoryResponse } from "./storyProductionGenerator";
 
 const input = {
   reference: "ST-ABCDEFGHIJ",
@@ -42,6 +42,28 @@ describe("story production generation", () => {
     expect(draft.productionStatus).toBe("review");
     expect(draft.pageScenes).toHaveLength(8);
     expect(draft.leonardoPrompts).toHaveLength(8);
+  });
+
+  it("returns raw model output alongside a valid draft for temporary admin display", async () => {
+    const rawOutput = validJson();
+    const callLLM = vi.fn().mockResolvedValue(response(rawOutput));
+    const result = await generateStoryProductionWithOutput(input, callLLM);
+    expect(result.rawOutput).toBe(rawOutput);
+    expect(result.draft.pageScenes).toHaveLength(8);
+  });
+
+  it("accepts common camelCase fields and derives the brief from the submitted order", () => {
+    const source = JSON.parse(validJson());
+    const camelCase = {
+      storyTitle: source.story_title,
+      characterDescription: source.character_description,
+      storyText: source.story_text,
+      pageScenes: source.page_scenes.map(({ page, scene }: { page: number; scene: string }) => ({ pageNumber: page, scene })),
+      leonardoPrompts: source.leonardo_prompts.map(({ page, prompt }: { page: number; prompt: string }) => ({ pageNumber: page, prompt })),
+    };
+    const draft = parseGeneratedStoryResponse(input, response(JSON.stringify(camelCase)));
+    expect(draft.storyBrief.childName).toBe(input.childName);
+    expect(draft.pageScenes).toHaveLength(8);
   });
 
   it.each([

@@ -31,6 +31,13 @@ function formFromOrder(reference: string, order?: { childName: string; childAge:
   };
 }
 
+function completeStoryPages<T extends { pageNumber: number }>(pages: T[] | undefined, fallback: (pageNumber: number) => T): T[] {
+  return Array.from({ length: 8 }, (_, index) => {
+    const pageNumber = index + 1;
+    return pages?.find(page => page.pageNumber === pageNumber) ?? fallback(pageNumber);
+  });
+}
+
 export default function StoryOrdersDashboard() {
   const orders = trpc.storyOrders.list.useQuery(undefined, { refetchInterval: 15000 });
   const [selectedReference, setSelectedReference] = useState<string | null>(null);
@@ -38,21 +45,24 @@ export default function StoryOrdersDashboard() {
   const photo = trpc.storyOrders.photoUrl.useQuery({ reference: selectedReference! }, { enabled: Boolean(selectedReference) });
   const production = trpc.storyOrders.production.useQuery({ reference: selectedReference! }, { enabled: Boolean(selectedReference) });
   const [form, setForm] = useState<ProductionForm | null>(null);
+  const [rawOutput, setRawOutput] = useState("");
   const update = trpc.storyOrders.updateStatus.useMutation({ onSuccess: () => { void orders.refetch(); void selected.refetch(); toast.success("تم حفظ حالة الطلب."); } });
   const generateLock = useRef(false);
   const saveProduction = trpc.storyOrders.saveProduction.useMutation({ onSuccess: () => { void production.refetch(); toast.success("تم حفظ ملف الإنتاج ونتيجة التحقق."); } });
-  const generateProduction = trpc.storyProductions.generate.useMutation({ onSuccess: async () => { await production.refetch(); toast.success("تم توليد القصة وحفظها للمراجعة."); }, onError: error => toast.error(error.message || "تعذر توليد القصة."), onSettled: () => { generateLock.current = false; } });
+  const generateProduction = trpc.storyProductions.generate.useMutation({ onSuccess: async result => { setRawOutput(result.rawOutput); if (!result.success) { toast.error(result.error); return; } await production.refetch(); toast.success("تم توليد القصة وحفظها للمراجعة."); }, onError: error => toast.error(error.message || "تعذر توليد القصة."), onSettled: () => { generateLock.current = false; } });
   const productionErrors = production.data?.validationResult.errors ?? [];
   const productionWarnings = production.data?.validationResult.warnings ?? [];
 
   useEffect(() => {
     if (!selectedReference) { setForm(null); return; }
     if (production.data) {
-      setForm({ reference: selectedReference, storyBrief: production.data.storyBrief, storyTitle: production.data.storyTitle, characterDescription: production.data.characterDescription, storyText: production.data.storyText, pageScenes: production.data.pageScenes, leonardoPrompts: production.data.leonardoPrompts, productionStatus: production.data.productionStatus });
+      setForm({ reference: selectedReference, storyBrief: production.data.storyBrief, storyTitle: production.data.storyTitle, characterDescription: production.data.characterDescription, storyText: production.data.storyText, pageScenes: completeStoryPages(production.data.pageScenes, pageNumber => ({ pageNumber, scene: "" })), leonardoPrompts: completeStoryPages(production.data.leonardoPrompts, pageNumber => ({ pageNumber, prompt: "" })), productionStatus: production.data.productionStatus });
     } else if (selected.data) {
       setForm(formFromOrder(selectedReference, selected.data));
     }
   }, [selectedReference, selected.data, production.data]);
+
+  useEffect(() => { setRawOutput(""); }, [selectedReference]);
 
   const canSave = useMemo(() => Boolean(form && !saveProduction.isPending), [form, saveProduction.isPending]);
   const close = () => setSelectedReference(null);
@@ -68,6 +78,7 @@ export default function StoryOrdersDashboard() {
       {photo.data?.url && <a className="story-photo-link" href={photo.data.url} target="_blank" rel="noreferrer"><Image size={17} /> فتح صورة الطفل برابط موقّع قصير العمر</a>}
       <div className="story-detail-controls"><label>حالة الطلب<select value={selected.data.status} onChange={event => update.mutate({ reference: selected.data!.reference, status: event.target.value as StoryOrderStatus, paymentStatus: selected.data!.paymentStatus })}>{Object.entries(storyOrderStatusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label><label>حالة الدفع<select value={selected.data.paymentStatus} onChange={event => update.mutate({ reference: selected.data!.reference, status: selected.data!.status, paymentStatus: event.target.value as StoryPaymentStatus })}>{Object.entries(storyPaymentStatusLabels).map(([value, label]) => <option key={value} value={label === storyPaymentStatusLabels.paid ? "paid" : "unpaid"}>{label}</option>)}</select></label></div>
       <hr className="story-production-divider" /><div className="story-production-heading"><div><span className="section-label">Story Production</span><h3>ملف الإنتاج</h3></div><div className="story-production-heading-actions"><span className="production-note">الصورة لا تُرسل إلى DeepSeek</span><button className="admin-save-button story-generate-button" type="button" disabled={generateProduction.isPending || generateLock.current} onClick={() => { if (generateLock.current || generateProduction.isPending) return; if (window.confirm("توليد القصة باستخدام DeepSeek — قد يستهلك API credits. هل تريد المتابعة؟")) { generateLock.current = true; generateProduction.mutate({ reference: selected.data!.reference, confirmed: true }); } }}><Sparkles size={16} /> {generateProduction.isPending ? "جاري التوليد…" : "توليد القصة باستخدام DeepSeek"}</button></div></div>
+      {rawOutput && <details className="story-ai-raw-output"><summary>عرض مخرجات DeepSeek الخام (للتشخيص)</summary><p>هذا الرد مؤقت لهذا العرض فقط، ولا يُحفظ ضمن ملف الإنتاج.</p><Textarea value={rawOutput} readOnly dir="auto" /> <button type="button" className="admin-ghost-button" onClick={() => void navigator.clipboard?.writeText(rawOutput)}>نسخ المخرجات</button></details>}
       <label>حالة الإنتاج<select value={form.productionStatus} onChange={event => updateForm("productionStatus", event.target.value as StoryProductionStatus)}>{storyProductionStatusValues.map(value => <option key={value} value={value}>{storyProductionStatusLabels[value]}</option>)}</select></label>
       <label>عنوان القصة<input value={form.storyTitle} onChange={event => updateForm("storyTitle", event.target.value)} maxLength={240} /></label>
       <label>وصف الشخصية الكرتونية<textarea value={form.characterDescription} onChange={event => updateForm("characterDescription", event.target.value)} maxLength={2000} /></label>

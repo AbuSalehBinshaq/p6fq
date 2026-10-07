@@ -15,6 +15,13 @@ export type StoryGenerationInput = {
   additionalNotes: string;
 };
 
+export class StoryOutputValidationError extends Error {
+  constructor(message: string, readonly rawOutput: string) {
+    super(message);
+    this.name = "StoryOutputValidationError";
+  }
+}
+
 const generationSystemPrompt = `أنت كاتب قصص أطفال عربية محترف. أخرج JSON صالحًا فقط، بدون Markdown أو شرح خارج JSON.
 
 القواعد:
@@ -51,6 +58,48 @@ export function buildStoryGenerationMessages(input: StoryGenerationInput) {
   ];
 }
 
+function firstDefined(record: Record<string, unknown>, ...keys: string[]): unknown {
+  for (const key of keys) if (record[key] !== undefined) return record[key];
+  return undefined;
+}
+
+function normalizeGeneratedJson(value: unknown, input: StoryGenerationInput): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const source = value as Record<string, unknown>;
+  const normalizePages = (pages: unknown, textKey: "scene" | "prompt") => {
+    if (!Array.isArray(pages)) return pages;
+    return pages.map((item, index) => {
+      if (!item || typeof item !== "object" || Array.isArray(item)) return item;
+      const page = item as Record<string, unknown>;
+      return {
+        page: firstDefined(page, "page", "pageNumber", "page_number") ?? index + 1,
+        [textKey]: firstDefined(page, textKey, textKey === "scene" ? "description" : "visual_prompt", textKey === "scene" ? "visual_description" : "leonardoPrompt"),
+      };
+    });
+  };
+
+  // The brief is sourced from the submitted order; requiring the model to echo it
+  // in a particular casing needlessly caused otherwise usable generations to fail.
+  return {
+    story_brief: {
+      child_name: input.childName,
+      child_age: input.childAge,
+      story_idea: input.storyIdea,
+      educational_value: input.educationalValue,
+      additional_notes: input.additionalNotes,
+    },
+    story_title: firstDefined(source, "story_title", "storyTitle", "title"),
+    character_description: firstDefined(source, "character_description", "characterDescription"),
+    story_text: firstDefined(source, "story_text", "storyText"),
+    page_scenes: normalizePages(firstDefined(source, "page_scenes", "pageScenes"), "scene"),
+    leonardo_prompts: normalizePages(firstDefined(source, "leonardo_prompts", "leonardoPrompts"), "prompt"),
+  };
+}
+
+function describeSchemaIssues(issues: Array<{ path: PropertyKey[]; message: string }>): string {
+  return issues.slice(0, 8).map(issue => `${issue.path.map(String).join(".") || "<root>"}: ${issue.message}`).join("; ");
+}
+
 export function parseGeneratedStoryResponse(input: StoryGenerationInput, response: InvokeResult): StoryProductionDraft {
   const choice = response.choices?.[0];
   if (!choice) throw new Error("DeepSeek returned no choices.");
@@ -66,8 +115,8 @@ export function parseGeneratedStoryResponse(input: StoryGenerationInput, respons
     throw new Error("DeepSeek returned malformed JSON.");
   }
 
-  const parsed = storyGenerationResponseSchema.safeParse(json);
-  if (!parsed.success) throw new Error("DeepSeek response failed the story output schema validation.");
+  const parsed = storyGenerationResponseSchema.safeParse(normalizeGeneratedJson(json, input));
+  if (!parsed.success) throw new Error(`DeepSeek response failed story validation: ${describeSchemaIssues(parsed.error.issues)}. Please retry once; if it repeats, check the model output format.`);
 
   const draft = generatedResponseToDraft(input.reference, parsed.data);
   const validation = validateStoryProduction(draft);
@@ -75,11 +124,21 @@ export function parseGeneratedStoryResponse(input: StoryGenerationInput, respons
   return draft;
 }
 
-export async function generateStoryProduction(input: StoryGenerationInput, callLLM: typeof invokeLLM = invokeLLM): Promise<StoryProductionDraft> {
+export async function generateStoryProductionWithOutput(input: StoryGenerationInput, callLLM: typeof invokeLLM = invokeLLM): Promise<{ draft: StoryProductionDraft; rawOutput: string }> {
   const response = await callLLM({
     messages: buildStoryGenerationMessages(input),
     response_format: { type: "json_object" },
     max_tokens: 12000,
   });
-  return parseGeneratedStoryResponse(input, response);
+  const rawOutput = contentToText(response.choices?.[0]?.message?.content ?? "");
+  try {
+    return { draft: parseGeneratedStoryResponse(input, response), rawOutput };
+  } catch (error) {
+    if (error instanceof Error && rawOutput) throw new StoryOutputValidationError(error.message, rawOutput);
+    throw error;
+  }
+}
+
+export async function generateStoryProduction(input: StoryGenerationInput, callLLM: typeof invokeLLM = invokeLLM): Promise<StoryProductionDraft> {
+  return (await generateStoryProductionWithOutput(input, callLLM)).draft;
 }
