@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, ChevronRight, CircleHelp, Heart, LockKeyhole, MessageCircle, ShieldCheck, Sparkles, Trash2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, CircleHelp, Heart, LockKeyhole, MessageCircle, ShieldCheck, Trash2 } from "lucide-react";
 import { analyticsPrivacyDisclosure, dataWeCollect, dataWeDoNotCollectOnSite, privacyCommitments, privacyPolicyMeta } from "@shared/privacyPolicy";
 import { useLocation } from "wouter";
 
@@ -6,7 +6,7 @@ export default function PrivacyPolicy() {
   const [, setLocation] = useLocation();
   return <main dir="rtl" className="privacy-page">
     <header className="privacy-nav page-width">
-      <button onClick={() => setLocation("/")} className="privacy-brand"><span><Sparkles size={17} /></span> أثر</button>
+      <button onClick={() => setLocation("/")} className="privacy-brand" aria-label="العودة إلى أثر"><img className="brand-logo" src="/assets/athar-logo.png" alt="Athar — أثر" /></button>
       <button onClick={() => setLocation("/")} className="privacy-back">العودة للصفحة الرئيسية <ArrowLeft size={16} /></button>
     </header>
     <section className="privacy-hero">

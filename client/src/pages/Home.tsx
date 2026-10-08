@@ -5,7 +5,7 @@ import { useSiteSettings } from "@/lib/siteSettings";
 import { contentImageLoadingProps, heroImageLoadingProps } from "@shared/imageLoading";
 import { childAgeRanges, type ConversationRequest } from "@shared/orderFlow";
 import { supportedPaymentMethods } from "@shared/paymentMethods";
-import { ArrowLeft, Check, ChevronDown, Clock3, Heart, ImagePlus, LockKeyhole, MessageCircle, Phone, Quote, Sparkles, Star, UserRound, X } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Clock3, Heart, ImagePlus, LockKeyhole, MessageCircle, Phone, Quote, Star, UserRound, X } from "lucide-react";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -122,7 +122,7 @@ export default function Home() {
     <main dir="rtl" className="landing-shell">
       <div className="top-strip">{settings.announcement}</div>
       <nav className="site-nav page-width" aria-label="التنقل الرئيسي">
-        <a href="#top" className="brand"><span className="brand-icon"><Sparkles size={18} /></span><span>أثر</span></a>
+        <a href="#top" className="brand" aria-label="أثر Athar"><img className="brand-logo" src="/assets/athar-logo.png" alt="Athar — أثر" /></a>
         <div className="nav-links"><a href="#what-you-get">شو بتستلمين؟</a><a href="#examples">أمثلة حقيقية</a><a href="#how">كيف نبدأ؟</a><a href="#trust">طمأنينة لك</a></div>
         <Button className="nav-button" onClick={scrollToConversation}>ابدئي محادثة <ArrowLeft size={16} /></Button>
       </nav>
@@ -200,7 +200,7 @@ export default function Home() {
       <section className="faq-section page-width"><span className="section-label">أسئلة مطمئنة قبل المحادثة</span><h2>تبين تعرفين أكثر؟</h2><div className="faq-list">{dynamicFaq.map(([question, answer], index) => <div className={`faq-item ${openFaq === index ? "open" : ""}`} key={question}><button onClick={() => setOpenFaq(openFaq === index ? null : index)}><span>{question}</span><ChevronDown size={19} /></button>{openFaq === index && <p>{answer}</p>}</div>)}</div></section>
 
       <section className="closing-section"><div className="page-width closing-inner"><div><span className="section-label">القصة التي يتذكرها ما تبدأ بملف</span><h2>تبدأ من أحد يسمعك،<br /><em>ويسمع طفلك.</em></h2><p>ابدئي برسالة بسيطة. لا صورة ولا دفع الآن.</p></div><Button className="primary-button" onClick={scrollToConversation}>ابدئي التفاهم <ArrowLeft size={18} /></Button></div></section>
-      <footer className="site-footer page-width"><span className="brand"><span className="brand-icon"><Sparkles size={15} /></span> أثر</span><div className="footer-payment" aria-label="وسائل الدفع المتاحة بعد اعتماد المعاينة"><span>الدفع بعد اعتماد المعاينة</span><div className="payment-badges">{supportedPaymentMethods.map(method => <span className={`payment-badge ${method.id}`} key={method.id} aria-label={method.label.replace("\n", " ")}>{method.id === "mastercard" && <i className="mastercard-circles" aria-hidden="true"><b /><b /></i>}<em>{method.label}</em></span>)}</div></div><nav className="footer-links" aria-label="روابط التذييل"><a href="/privacy">سياسة الخصوصية</a></nav></footer>
+      <footer className="site-footer page-width"><span className="brand"><img className="brand-logo" src="/assets/athar-logo.png" alt="Athar — أثر" /></span><div className="footer-payment" aria-label="وسائل الدفع المتاحة بعد اعتماد المعاينة"><span>الدفع بعد اعتماد المعاينة</span><div className="payment-badges">{supportedPaymentMethods.map(method => <span className={`payment-badge ${method.id}`} key={method.id} aria-label={method.label.replace("\n", " ")}>{method.id === "mastercard" && <i className="mastercard-circles" aria-hidden="true"><b /><b /></i>}<em>{method.label}</em></span>)}</div></div><nav className="footer-links" aria-label="روابط التذييل"><a href="/privacy">سياسة الخصوصية</a></nav></footer>
 
       {gallery && <div className="gallery-backdrop" role="presentation" onClick={() => setGallery(null)}><div className="gallery-modal" role="dialog" aria-modal="true" aria-labelledby="gallery-title" onClick={event => event.stopPropagation()}><button className="gallery-close" aria-label="إغلاق المعاينة" onClick={() => setGallery(null)}><X size={21} /></button><span className="section-label">صفحات من القصة</span><h3 id="gallery-title">{gallery.title}</h3><p>{gallery.story}</p><div className="gallery-pages">{gallery.pages.map((page, index) => <img src={page} key={page} alt={`${gallery.title} — صفحة ${index + 1}`} {...contentImageLoadingProps} />)}</div></div></div>}
     </main>

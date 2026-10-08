@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { trackEvent } from "@/lib/analytics";
-import { ArrowLeft, Check, ClipboardCheck, LockKeyhole, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowLeft, Check, ClipboardCheck, LockKeyhole, MessageCircle } from "lucide-react";
 import { useMemo } from "react";
 import { useLocation } from "wouter";
 
@@ -37,7 +37,7 @@ export default function ConversationSuccess() {
   };
 
   return <main dir="rtl" className="success-page">
-    <header className="success-nav"><button onClick={() => setLocation("/")} className="success-brand"><span><Sparkles size={17} /></span> أثر</button></header>
+    <header className="success-nav"><button onClick={() => setLocation("/")} className="success-brand" aria-label="العودة إلى أثر"><img className="brand-logo" src="/assets/athar-logo.png" alt="Athar — أثر" /></button></header>
     <section className="success-panel">
       <div className="success-check"><Check size={35} /></div>
       <span className="section-label">تم ترتيب بداية الحكاية</span>
