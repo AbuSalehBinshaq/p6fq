@@ -165,3 +165,6 @@ body { font-family:"Tajawal",Arial,sans-serif; }
 
 /* Use Tajawal consistently while retaining the existing heading hierarchy. */
 .privacy-hero h1,.policy-block h2,.privacy-closing h2,.evidence-copy h3,.form-head h3,.success-state h3,.gallery-modal h3,.orders-header h1,.success-panel h1,.admin-page-header h1,.summary-hero-card h2{font-weight:800}
+
+/* Clear contrast and action styling on the dark, editorial sections. */
+.journey-section .section-label{color:#DED4CA}.journey-section .journey-heading h2 em,.privacy-closing h2 em{color:#DED4CA}.journey-section .journey-grid b{color:#F8F4EF;border-color:#8c8278}.order-cta-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:12px 18px;color:#262320;border:1px solid #F8F4EF;border-radius:999px;background:#F8F4EF;box-shadow:0 8px 18px #00000024;font-size:14px;font-weight:800;text-decoration:none;white-space:nowrap;transition:background-color .18s ease,transform .18s ease,box-shadow .18s ease}.order-cta-link:hover{color:#171513;background:#EEE7E0;box-shadow:0 10px 22px #0000002e;transform:translateY(-1px)}.order-cta-link:focus-visible{outline:3px solid #DED4CA;outline-offset:3px}
